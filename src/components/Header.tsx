@@ -93,29 +93,75 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Play className="w-5 h-5 text-white fill-white" />
+          
+          {/* Logo Habi Music (Teks Cantik) dengan Efek Kilau & Suara */}
+          <Link href="/" className="flex items-center gap-2 group relative overflow-hidden px-1 py-1 rounded-lg">
+            {/* CSS Efek Cahaya Melintas */}
+            <style dangerouslySetInnerHTML={{__html: `
+              .cahaya-kilau {
+                position: absolute;
+                top: 0;
+                left: -150%;
+                width: 150%;
+                height: 100%;
+                background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);
+                transform: skewX(-25deg);
+                animation: kilauAnimasi 1.5s ease-in-out 0.2s forwards;
+                z-index: 20;
+                pointer-events: none;
+              }
+              @keyframes kilauAnimasi {
+                0% { left: -150%; }
+                100% { left: 150%; }
+              }
+            `}} />
+            <div className="cahaya-kilau"></div>
+            
+            {/* Ikon Play Gradasi */}
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 relative z-10 shadow-lg shadow-pink-500/30 flex-shrink-0">
+              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
             </div>
-            <span className="font-display font-bold text-xl gradient-text">
-              SekaiDrama
+            
+            {/* Teks Logo Gradasi Bergaya Melolo */}
+            <span className="font-display font-extrabold text-lg md:text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400 relative z-10 tracking-tight whitespace-nowrap">
+              Habi Music
             </span>
+
+            {/* Efek Suara */}
+            <audio autoPlay preload="auto">
+              <source src="https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg" type="audio/ogg" />
+            </audio>
           </Link>
 
-          {/* Search Button Only - No Nav Links */}
-          <div className="flex items-center gap-2">
+          {/* Bagian Kanan: Tombol Event & Search */}
+          <div className="flex items-center gap-1.5 md:gap-3">
+            
+            {/* Tombol Promo: Event Nonton Dapat Uang */}
+            <a 
+              href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20mau%20info%20event%20nonton%20drama%20dapat%20uang!" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-2.5 py-1.5 rounded-full animate-pulse shadow-[0_0_12px_rgba(234,179,8,0.6)] border border-yellow-300/50 hover:scale-105 transition-transform"
+            >
+              <span className="text-[10px] md:text-xs font-extrabold text-white drop-shadow-md whitespace-nowrap">
+                🎁 Dapat Uang!
+              </span>
+            </a>
+
+            {/* Tombol Search */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-2.5 rounded-xl hover:bg-muted/50 transition-colors"
+              className="p-2 rounded-xl hover:bg-muted/50 transition-colors flex-shrink-0"
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
             </button>
           </div>
+
         </div>
       </div>
-
+    </header>
+          
       {/* Search Overlay (Portal) */}
       {searchOpen &&
         typeof document !== "undefined" &&
