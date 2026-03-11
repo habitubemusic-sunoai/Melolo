@@ -35,8 +35,8 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  // NAMA CS ACAK CEWEK INDO JATIM
-  const csNames = ["Siti", "Ayu", "Nisa", "Rini", "Putri", "Dinda"];
+  // Data Nama CS
+  const csNames = ["Siti", "Ayu", "Nisa", "Rini", "Putri", "Zahra"];
   const [csInfo, setCsInfo] = useState({ name: "CS" });
   const [csSt, setCsSt] = useState("Online");
   const [chatMode, setChatMode] = useState('idle'); 
@@ -48,6 +48,9 @@ export function Header() {
   const [showEmoji, setShowEmoji] = useState(false);
   const chatRef = useRef(null);
   const fileInputRef = useRef(null);
+  const idleChatTimeout = useRef(null);
+  const hasNotified = useRef(false);
+  
   const emojis = ["😀","😂","🤣","😍","🙏","👍","😭","😎","🥰","😊","🥺","🔥","🤔","💡","✅","❌"];
   const pTexts = ["Klaim Rp 10.000", "Nonton Dibayar", "Tarik Saldo", "Bonus Cuan!"];
 
@@ -130,21 +133,84 @@ export function Header() {
 
   useEffect(() => { if(chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt, chatMode]);
 
+  // ===============================================
+  // FUNGSI NOTIFIKASI PINTAR (POST-CHAT)
+  // ===============================================
+  const sendPostChatNotif = () => {
+    if(hasNotified.current) return;
+    hasNotified.current = true;
+    
+    const endMsgs = [
+      `Terima kasih sudah menghubungi CS Habi Music Kak! 🙏 Jangan lupa lanjut nonton episode dramanya biar saldo cepat 100rb dan bisa dicairkan ya 😊`,
+      `Sesi chat telah berakhir. Semangat terus kumpulin koinnya dari nonton drama ya Kak! Kalau ada kendala penarikan DANA, CS ${csInfo.name} selalu siap bantu 🙏`,
+      `Halo Kak, obrolan bantuan tadi sudah ditutup ya. Ingat, Habi Music selalu siap bantu Kakak mencairkan uang tunai dari nonton drama. Sehat selalu! ✨`,
+      `Pesan dari CS ${csInfo.name}: Terima kasih Kak! Terus nikmati tontonan drama pendek kami dan raih cuannya. Kalau butuh bantuan lagi, kami selalu ada 🙏`,
+      `Sesi bantuan selesai. Jangan lupa fokus selesaikan episode dramanya ya Kak biar koinnya cepat masuk dan bisa ditarik ke rekening! 💸`
+    ];
+    const randMsg = endMsgs[Math.floor(Math.random() * endMsgs.length)];
+    const tS = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+    
+    setNotifs(p => [{ id: 'notif_'+Date.now(), type: 'app', time: tS, title: `Pesan CS ${csInfo.name}`, text: randMsg }, ...p]);
+  };
+
+  // SISTEM AUTO-PAMIT (IDLE 3 MENIT)
+  useEffect(() => {
+    if (chatMode === 'connected') {
+      clearTimeout(idleChatTimeout.current);
+      idleChatTimeout.current = setTimeout(() => {
+        setChatMode('ended');
+        setCsSt("Offline");
+        setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Assalamualaikum Kak 🙏 Karena sudah 3 menit tidak ada respons, sesi chat ini ${csInfo.name} akhiri dulu ya. Jangan lupa lanjut nonton dramanya biar koin Habi Music-nya cepat ditarik! 😊` }]);
+        sendPostChatNotif(); // Kirim Notif
+      }, 180000); 
+    }
+    return () => clearTimeout(idleChatTimeout.current);
+  }, [chats, chatMode]);
+
   const openChatCS = () => {
     setChatOpen(true);
     if(chatMode === 'idle') {
-      setChatMode('queue'); setCsSt("Mencari agen CS...");
+      hasNotified.current = false; // Reset notif status
+      const newName = csNames[Math.floor(Math.random() * csNames.length)];
+      setCsInfo({ name: newName });
+      setChatMode('queue'); setCsSt("Mencari CS...");
       setTimeout(() => {
         setCsSt("Antrean ke-1...");
         setTimeout(() => {
           setChatMode('connected'); setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Assalamualaikum Kak 🙏 Perkenalkan aku ${csInfo.name}, CS dari Habi Music. Ada yang bisa aku bantu untuk aplikasinya hari ini? 😊` }]);
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Assalamualaikum Kak 🙏 Perkenalkan aku ${newName}, CS Habi Music. Ada yang bisa aku bantu terkait aplikasi atau penarikannya? 😊` }]);
         }, 3000);
       }, 2500);
     }
   };
 
-  const handleImageUpload = (e) => {
+  // KELUAR DARI CHAT (PANAH KIRI)
+  const handleBackOut = () => {
+    setChatOpen(false);
+    if(chatMode === 'connected' || chatMode === 'ended') {
+      sendPostChatNotif();
+    }
+  };
+
+  // TOMBOL LED MERAH (PAMIT MANUAL)
+  const manualEndChat = () => {
+    if(chatMode !== 'connected') return;
+    if(confirm("Akhiri sesi obrolan dengan CS?")) {
+      setChatMode('ended');
+      setCsSt("Offline");
+      clearTimeout(idleChatTimeout.current);
+      setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Baik Kak, obrolan ini ${csInfo.name} tutup ya 🙏 Terima kasih sudah setia menggunakan Habi Music. Terus semangat kumpulin koin dari nonton dramanya! Wassalamualaikum 😊` }]);
+      sendPostChatNotif(); // Kirim Notif
+    }
+  };
+
+  const resetChat = () => { setChats([]); setChatMode('idle'); setCsSt("Online"); openChatCS(); };
+
+  const getBase64 = (file) => new Promise((res) => {
+    const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => res(reader.result.split(',')[1]);
+  });
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if(!file) return;
     const url = URL.createObjectURL(file);
@@ -153,9 +219,7 @@ export function Header() {
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
-  // ===============================================
-  // OTAK ULTRA V.1 (Mikir, Sat-set, Sopan, Animasi)
-  // ===============================================
+  // OTAK AI VERSI ULTRA MAX (MEMORI SUPER & PAHAM APLIKASI DRAMA)
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
@@ -165,52 +229,46 @@ export function Header() {
     setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:text, img:imgUrl, status:'sent' }]);
     if(!isImg) setChatInput("");
 
-    // JEDA 1: Belum dibaca (Centang abu) -> Tunggu 3 sampai 6 Detik
     const readDelay = Math.floor(Math.random() * 3000) + 3000; 
     
     setTimeout(async () => {
-      // DIBACA (Berubah centang biru)
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
-      
-      // JEDA 2: Waktu CS Mikir (1 sampai 3 detik) status masih 'Online'
       const thinkDelay = Math.floor(Math.random() * 2000) + 1000;
-
+      
       setTimeout(async () => {
-        // MULAI NGETIK
         setCsSt("Mengetik..."); 
         
         let reply = "";
         const lText = text.toLowerCase();
-        // Deteksi kalimat gampang
         const isSimple = lText.match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
 
         try {
-          // PROMPT SANGAT SPESIFIK (Muslimah Jatim, Sopan)
-          let prompt = `Instruksi Mutlak: Kamu adalah CS Habi Music bernama ${csInfo.name}. Kamu wanita muslimah Jawa Timur yang sangat sopan dan ramah kepada pembeli/pengguna. Jawab MAX 2 kalimat pendek ala chat WA biasa. Jangan formal, jangan sebut kamu AI.\n`;
-          
-          if(isImg) {
-            prompt += `[INFO: Pengguna baru kirim Foto Screenshot. Berikan balasan: "Baik kak, gambarnya udah ${csInfo.name} terima ya 🙏 Kalau saldonya belum 100rb, lanjut nonton dulu aja ya kak biar koinnya cepat nambah dan bisa dicairkan 😊"]\n`;
-          }
+          let historyText = "";
+          chats.slice(-6).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
 
-          prompt += `User: "${text}"\nBalasanmu:`;
+          let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS aplikasi "Habi Music". FAKTA PENTING TENTANG APLIKASI: Habi Music adalah APLIKASI NONTON DRAMA PENDEK berhadiah uang, BUKAN APLIKASI LAGU/MUSIK. Jika ditanya lagu, tegaskan ini aplikasi nonton drama berbayar. Pengguna mendapat uang setelah selesai nonton 1 episode. Penarikan minimal Rp 100.000 ke DANA/Gopay/ShopeePay. Sifatmu: Muslimah Jawa Timur, ramah, SANGAT SOPAN, pintar, dan asyik. Jawab MAKSIMAL 2 kalimat pendek. Pahami konteks obrolan sebelumnya.\n`;
+
+          if(isImg) prompt += `[INFO: User baru mengirim GAMBAR SCREENSHOT. Abaikan chat sebelumnya, langsung balas: "Gambarnya sudah ${csInfo.name} terima dan cek ya kak 🙏 Kalau saldo Kakak belum sampai 100rb, lanjut nonton dramanya dulu ya biar cepat cair 😊"]\n`;
+
+          prompt += `\nRiwayat Obrolan Terakhir:\n${historyText}User: "${text}"\nBalasanmu:`;
 
           const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
           if (!res.ok) throw new Error("API failed");
           reply = await res.text();
 
         } catch(err) {
-          // CADANGAN SUPER AMAN
-          if(isImg) reply = `Baik Kak, gambarnya udah ${csInfo.name} terima ya. Nanti diteruskan ke tim teknis 🙏`;
-          else if (lText.match(/\b(assalamu|salam|samlekom)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu untuk penarikannya?`;
-          else if (lText.match(/cair|tarik|uang|wd/)) reply = "Proses penarikan biasanya memakan waktu 1-3 hari kerja ya Kak 😊 Mohon ditunggu.";
-          else if (lText.match(/kok|lama|belum|mana/)) reply = "Mohon maaf yang sebesar-besarnya ya Kak bikin nunggu 🙏 Antrean penarikan memang lagi padat hari ini.";
-          else if (lText.match(/\b(halo|hai|pagi|siang|p|ping)\b/)) reply = `Halo Kak! Aku ${csInfo.name}, ada kendala apa nih di aplikasinya?`;
-          else if (lText.match(/iya|oke|sip|baik|makasih/)) reply = `Sama-sama Kak! Senang bisa membantu. Kalau ada apa-apa chat ${csInfo.name} lagi ya 😊`;
-          else reply = `Oh begitu ya Kak hehe. Terus kelanjutannya gimana tuh Kak? 😊`;
+          if(isImg) reply = `Baik Kak, gambarnya udah ${csInfo.name} terima ya. Kalau saldonya belum 100rb, semangat nonton dramanya terus ya Kak 🙏`;
+          else if (lText.match(/\b(assalamu|salam|samlekom)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu terkait aplikasinya?`;
+          else if (lText.match(/cair|tarik|uang|wd|dana/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak, prosesnya 1-3 hari kerja 😊";
+          else if (lText.match(/lagu|musik|music/)) reply = `Maaf Kak, walaupun namanya Habi Music, tapi ini sebenarnya aplikasi nonton drama lho Kak 😊 Nonton dramanya bisa dapat uang.`;
+          else if (lText.match(/kok|lama|belum|mana/)) reply = `Mohon maaf yang sebesar-besarnya ya Kak 🙏 Antrean penarikannya memang sedang sangat padat hari ini.`;
+          else if (lText.match(/gimana|cara/)) reply = "Kakak tinggal fokus nonton episode dramanya sampai habis aja, nanti koinnya bertambah otomatis kok.";
+          else if (lText.match(/\b(halo|hai|p|ping)\b/)) reply = `Halo Kak! Aku ${csInfo.name}, ada kendala apa nih di aplikasinya?`;
+          else if (lText.match(/iya|oke|sip|baik|makasih/)) reply = `Sama-sama Kak! Senang bisa melayani Kakak. Kalau ada apa-apa jangan sungkan chat lagi ya 😊`;
+          else reply = `Oh begitu ya Kak 🙏 Terus kelanjutannya gimana tuh Kak? Di aplikasinya aman kan?`;
         }
 
-        // JEDA 3: Waktu Ngetik (Sat-set kalau pertanyaan gampang, lama kalau panjang)
-        const baseTyping = isSimple ? 1500 : Math.min(Math.max(reply.length * 40, 3000), 8000);
+        const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2500), 7000);
         const typingDuration = baseTyping + Math.floor(Math.random() * 1000); 
 
         setTimeout(() => {
@@ -265,7 +323,7 @@ export function Header() {
                       <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-100">
                         <h3 className="font-black text-base sm:text-sm text-gray-800">Pusat Notifikasi</h3>
                         <div className="flex gap-2">
-                          <button onClick={openChatCS} className="flex items-center gap-1 bg-[#25D366]/10 text-[#008069] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#25D366]/20 transition-colors"><MessageCircle className="w-4 h-4"/> Chat CS</button>
+                          <button onClick={openChatCS} className="flex items-center gap-1 bg-[#25D366]/10 text-[#075e54] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#25D366]/20 transition-colors"><MessageCircle className="w-4 h-4"/> Chat CS</button>
                           <button onClick={()=>setShowNotif(false)} className="p-1"><X className="w-6 h-6 sm:w-5 sm:h-5 text-gray-500"/></button>
                         </div>
                       </div>
@@ -284,19 +342,17 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      {/* HEADER WHATSAPP DENGAN ANIMASI LOGO PROFIL & TANPA TOMBOL TELPON */}
-                      <style dangerouslySetInnerHTML={{__html: `@keyframes fadeA { 0%, 45% {opacity:1} 50%, 95% {opacity:0} 100% {opacity:1} } @keyframes fadeB { 0%, 45% {opacity:0} 50%, 95% {opacity:1} 100% {opacity:0} }`}} />
+                      <style dangerouslySetInnerHTML={{__html: `@keyframes showLogo { 0%, 75% {opacity:1; transform:scale(1)} 75.01%, 100% {opacity:0; transform:scale(0.8)} } @keyframes showText { 0%, 75% {opacity:0; transform:scale(0.8)} 75.01%, 100% {opacity:1; transform:scale(1)} }`}} />
                       
-                      <div className="flex items-center p-3 bg-[#008069] text-white shadow-md z-10">
-                        <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
+                      <div className="flex items-center p-3 bg-[#075e54] text-white shadow-md z-10">
+                        <button onClick={handleBackOut} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
                         
-                        {/* FOTO PROFIL ANIMASI */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 shadow-sm relative border-[1.5px] border-white/50">
-                           <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ animation: 'fadeA 8s infinite' }}>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 relative shadow-sm border-[1.5px] border-white/40">
+                           <div className="absolute inset-0 flex items-center justify-center bg-white transition-all duration-300" style={{ animation: 'showLogo 16s infinite' }}>
                               <div className="w-[20px] h-[14px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>
                            </div>
-                           <div className="absolute inset-0 flex items-center justify-center bg-[#008069]" style={{ animation: 'fadeB 8s infinite' }}>
-                              <span className="text-[8px] font-black tracking-tighter leading-[10px] text-center text-white">HABI<br/>MUSIC</span>
+                           <div className="absolute inset-0 flex items-center justify-center bg-white transition-all duration-300" style={{ animation: 'showText 16s infinite' }}>
+                              <span className="text-[10px] font-black tracking-tighter leading-tight text-black text-center" style={{fontFamily: 'Oswald, Roboto, sans-serif'}}>Habi<br/>Music</span>
                            </div>
                         </div>
 
@@ -304,46 +360,59 @@ export function Header() {
                           <span className="font-semibold text-base leading-tight">CS {csInfo.name}</span>
                           <span className="text-[12px] opacity-90 truncate">{csSt}</span>
                         </div>
+                        
+                        {chatMode === 'connected' && (
+                          <button onClick={manualEndChat} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors ml-2" title="Akhiri Obrolan">
+                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)] border border-red-300/50"></div>
+                          </button>
+                        )}
                       </div>
                       
-                      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#efeae2', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
+                      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#e5ddd5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
                         <div className="text-center text-[11px] text-gray-700 font-medium my-2 bg-[#D1EAF1] self-center px-4 py-1.5 rounded-lg shadow-sm">HARI INI</div>
                         <div className="text-center text-[10px] text-gray-600 font-medium my-1 bg-[#FEF4C5] self-center px-3 py-2 rounded-lg shadow-sm w-[90%] leading-relaxed flex items-start gap-1"><div className="mt-0.5">🔒</div><span>Pesan dan panggilan dienkripsi secara end-to-end. Tim Habi Music tidak dapat membaca sandi Anda.</span></div>
 
                         {chatMode === 'queue' && (
-                           <div className="self-center bg-white text-gray-700 text-xs px-4 py-2 rounded-full font-bold mt-4 flex items-center gap-2 shadow-sm"><div className="w-3 h-3 border-2 border-[#008069] border-t-transparent rounded-full animate-spin"></div> {csSt}</div>
+                           <div className="self-center bg-white text-gray-700 text-xs px-4 py-2 rounded-full font-bold mt-4 flex items-center gap-2 shadow-sm"><div className="w-3 h-3 border-2 border-[#075e54] border-t-transparent rounded-full animate-spin"></div> {csSt}</div>
                         )}
 
-                        {chatMode === 'connected' && chats.map(c => (
+                        {chats.map(c => (
                           <div key={c.id} className={`flex flex-col max-w-[85%] ${c.sender === 'user' ? 'self-end' : 'self-start'}`}>
-                            <div className={`p-2 rounded-lg text-[14px] shadow-sm relative ${c.sender === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
+                            <div className={`p-2 rounded-lg text-[14px] shadow-sm relative ${c.sender === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
                               {c.img && <img src={c.img} className="w-full max-w-[200px] rounded-md mb-1 border border-gray-200" alt="uploaded"/>}
                               {c.text && <p className="text-[#111111] break-words pr-12 pb-2 pl-1 leading-snug">{c.text}</p>}
                               <div className="absolute right-1.5 bottom-1 flex items-center gap-1">
                                 <span className="text-[10px] text-gray-500 font-medium">{c.time.split(' ')[0]}</span>
-                                {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-[#53bdeb]"/> : <CheckCheck className="w-4 h-4 text-gray-400"/>)}
+                                {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-[#34B7F1]"/> : <CheckCheck className="w-4 h-4 text-gray-400"/>)}
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
 
-                      {/* INPUT WHATSAPP TANPA KAMERA */}
                       <div className="p-2 bg-transparent flex gap-1.5 items-end relative z-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover' }}>
-                        {showEmoji && (
-                          <div className="absolute bottom-[60px] left-2 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 grid grid-cols-8 gap-2 w-[90%] z-50 animate-in slide-in-from-bottom-2">
-                            {emojis.map(e => <button type="button" key={e} onClick={() => setChatInput(p => p+e)} className="text-xl hover:scale-125 transition-transform">{e}</button>)}
-                          </div>
+                        {chatMode === 'ended' ? (
+                          <button onClick={resetChat} className="w-full bg-[#075e54] text-white font-bold py-3 rounded-full shadow-md hover:bg-[#054c44] transition-colors">
+                             Mulai Obrolan Baru
+                          </button>
+                        ) : (
+                          <>
+                            {showEmoji && (
+                              <div className="absolute bottom-[60px] left-2 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 grid grid-cols-8 gap-2 w-[90%] z-50 animate-in slide-in-from-bottom-2">
+                                {emojis.map(e => <button type="button" key={e} onClick={() => setChatInput(p => p+e)} className="text-xl hover:scale-125 transition-transform">{e}</button>)}
+                              </div>
+                            )}
+                            <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm min-h-[44px]">
+                              <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2 flex-shrink-0 ${showEmoji ? 'text-[#075e54]' : 'text-gray-500'}`}><Smile className="w-6 h-6"/></button>
+                              <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
+                              <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                              <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 flex-shrink-0 transform -rotate-45 ml-1 mr-1 hover:text-[#075e54]"><Paperclip className="w-6 h-6"/></button>
+                            </div>
+                            <button onClick={sendChat} disabled={chatMode !== 'connected' || chatInput.trim().length === 0} className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mb-0.5 transition-colors ${chatMode === 'connected' && chatInput.trim().length > 0 ? 'bg-[#075e54]' : 'bg-gray-400'}`}>
+                              <Send className="w-5 h-5 text-white ml-1"/>
+                            </button>
+                          </>
                         )}
-                        <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm border border-gray-200 min-h-[44px]">
-                           <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2 flex-shrink-0 ${showEmoji ? 'text-[#008069]' : 'text-gray-500'}`}><Smile className="w-6 h-6"/></button>
-                           <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
-                           <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-                           <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 flex-shrink-0 transform -rotate-45 ml-1 mr-1 hover:text-[#008069]"><Paperclip className="w-6 h-6"/></button>
-                        </div>
-                        <button onClick={sendChat} disabled={chatMode !== 'connected' || chatInput.trim().length === 0} className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mb-0.5 transition-colors ${chatMode === 'connected' && chatInput.trim().length > 0 ? 'bg-[#008069]' : 'bg-gray-400'}`}>
-                          <Send className="w-5 h-5 text-white ml-1"/>
-                        </button>
                       </div>
                     </>
                   )}
