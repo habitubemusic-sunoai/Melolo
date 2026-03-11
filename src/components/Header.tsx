@@ -15,21 +15,22 @@ import { usePlatform } from "@/hooks/usePlatform";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePathname } from "next/navigation";
 
+// Tipe Data agar Vercel Lolos Sensor
 type NotifData = { id: string; type: string; time: string; text: string; };
 
 export function Header() {
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false); // Kunci Anti-Error Vercel
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 300);
   const normalizedQuery = debouncedQuery.trim();
 
-  // State Tampilan Waktu & Logo
   const [showLogo, setShowLogo] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
   const [userCity, setUserCity] = useState("Mendeteksi...");
 
-  // State Promo Uang (15 detik diam + 10 detik hujan)
+  // Fitur Uang
   const [showPromo, setShowPromo] = useState(true);
   const [isExploding, setIsExploding] = useState(false);
   const promoTexts = ["Klaim Rp10.000", "Tarik ke DANA", "Tonton = Cuan", "Tarik GoPay"];
@@ -40,7 +41,8 @@ export function Header() {
   const [notifs, setNotifs] = useState<NotifData[]>([]);
 
   useEffect(() => {
-    // Timer Animasi
+    setIsMounted(true); // Memberitahu Vercel bahwa halaman siap
+
     const logoTimer = setTimeout(() => setShowLogo(false), 20000);
     const explodeTimer = setTimeout(() => {
       setIsExploding(true);
@@ -52,11 +54,11 @@ export function Header() {
       setTimeout(() => { setTextIndex((prev) => (prev + 1) % promoTexts.length); setFadeText(true); }, 500); 
     }, 3000);
 
-    // Lokasi
+    // Lacak Lokasi
     const fetchIP = () => fetch('https://get.geojs.io/v1/ip/geo.json').then(r => r.json()).then(d => setUserCity(d.city || "Indonesia")).catch(() => setUserCity("Indonesia"));
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`).then(r => r.json()).then(d => setUserCity(d.address.city || d.address.town || d.address.county || "Indonesia")).catch(fetchIP),
+        (pos) => fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`).then(r => r.json()).then(d => setUserCity(d.address?.city || d.address?.town || d.address?.county || "Indonesia")).catch(fetchIP),
         () => fetchIP(), { timeout: 5000 }
       );
     } else fetchIP();
@@ -68,7 +70,7 @@ export function Header() {
       setCurrentTime(`${d.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })} | ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ${offset === 8 ? "WITA" : offset === 9 ? "WIT" : "WIB"}`);
     }, 1000);
 
-    // Sistem Notifikasi Harian
+    // Sistem Notifikasi Pintar
     const buildNotifs = () => {
       const now = new Date();
       const active: NotifData[] = [];
@@ -104,10 +106,11 @@ export function Header() {
   const { data: freeReelsResults, isLoading: isSearchingFreeReels } = useFreeReelsSearch(isFreeReels ? normalizedQuery : "");
 
   const isSearching = isDramaBox ? isSearchingDramaBox : isReelShort ? isSearchingReelShort : isShortMax ? isSearchingShortMax : isNetShort ? isSearchingNetShort : isMelolo ? isSearchingMelolo : isFlickReels ? isSearchingFlickReels : isSearchingFreeReels;
-  const rawResults = isDramaBox ? dramaBoxResults : isReelShort ? reelShortResults?.data : isShortMax ? shortMaxResults?.data : isNetShort ? netShortResults?.data : isMelolo ? meloloResults?.data?.search_data?.flatMap((i: any) => i.books || []).filter((b: any) => b.thumb_url) || [] : isFlickReels ? flickReelsResults?.data : freeReelsResults;
+  
+  // Memaksa Tipe Data Aman untuk Vercel
+  const rawResults: any[] = (isDramaBox ? dramaBoxResults : isReelShort ? reelShortResults?.data : isShortMax ? shortMaxResults?.data : isNetShort ? netShortResults?.data : isMelolo ? meloloResults?.data?.search_data?.flatMap((i: any) => i.books || []).filter((b: any) => b.thumb_url) : isFlickReels ? flickReelsResults?.data : freeReelsResults) || [];
 
-  // Fungsi peringkas kode agar tidak terpotong Vercel
-  const getMappedResult = (item: any) => {
+  const getMap = (item: any) => {
     if (isDramaBox) return { id: item.bookId, link: `/detail/dramabox/${item.bookId}`, cover: item.cover, title: item.bookName, desc: item.introduction };
     if (isReelShort) return { id: item.book_id, link: `/detail/reelshort/${item.book_id}`, cover: item.book_pic, title: item.book_title, desc: item.special_desc };
     if (isShortMax) return { id: item.shortPlayId, link: `/detail/shortmax/${item.shortPlayId}`, cover: item.cover, title: item.title, desc: "" };
@@ -119,6 +122,8 @@ export function Header() {
   };
 
   if (pathname?.startsWith("/watch")) return null;
+  // Jika halaman belum siap, jangan render portal agar Vercel tidak Error
+  if (!isMounted) return null; 
 
   return (
     <>
@@ -159,7 +164,7 @@ export function Header() {
                           <div className="flex-1 pr-6">
                             <p className="text-[10px] text-gray-400 mb-1">{n.time}</p>
                             <p className="text-xs text-gray-800 font-medium">
-                              {n.type === 'youtube' ? <>{n.text.split('{link}')[0]}<a href="https://www.youtube.com/@habientertainmentofficial" target="_blank" className="text-[#FF0000] font-bold">Subscribe</a>{n.text.split('{link}')[1]}</> : n.text}
+                              {n.type === 'youtube' ? <>{n.text.split('{link}')[0]}<a href="https://www.youtube.com/@habientertainmentofficial" target="_blank" rel="noopener noreferrer" className="text-[#FF0000] font-bold hover:underline">Subscribe</a>{n.text.split('{link}')[1]}</> : n.text}
                             </p>
                           </div>
                           <button onClick={() => deleteNotif(n.id)} className="absolute top-3 right-3 text-gray-300 hover:text-[#FF0000]"><Trash2 className="w-4 h-4" /></button>
@@ -174,21 +179,20 @@ export function Header() {
           </div>
         </div>
 
-        {/* Portal Search */}
-        {searchOpen && typeof document !== "undefined" && createPortal(
+        {searchOpen && createPortal(
           <div className="fixed inset-0 bg-white z-[9999] overflow-hidden flex flex-col px-4 py-6">
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1 relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari drama..." className="w-full pl-12 bg-gray-50 border border-gray-200 rounded-2xl py-3 outline-none" autoFocus /></div>
-              <button onClick={() => setSearchOpen(false)} className="p-3 bg-gray-100 rounded-xl"><X className="w-5 h-5" /></button>
+              <div className="flex-1 relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={`Cari di ${platformInfo.name}...`} className="w-full pl-12 bg-gray-50 border border-gray-200 rounded-2xl py-3 outline-none" autoFocus /></div>
+              <button onClick={handleSearchClose} className="p-3 bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-700" /></button>
             </div>
             <div className="flex-1 overflow-y-auto">
               {isSearching && normalizedQuery && <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" /></div>}
-              {rawResults?.length > 0 && <div className="grid gap-3">{rawResults.map((item: any, i: number) => {
-                const res = getMappedResult(item);
+              {rawResults.length > 0 && <div className="grid gap-3">{rawResults.map((item: any, i: number) => {
+                const res = getMap(item);
                 return (
-                  <Link key={i} href={res.link} onClick={() => setSearchOpen(false)} className="flex gap-4 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm animate-fade-up">
+                  <Link key={i} href={res.link} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm animate-fade-up">
                     <div className="w-16 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">{res.cover ? <img src={res.cover} alt={res.title} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" /> : <span className="text-xs text-gray-400 flex h-full items-center justify-center">No Img</span>}</div>
-                    <div className="flex-1 min-w-0"><h3 className="font-bold truncate">{res.title}</h3><p className="text-sm text-gray-500 line-clamp-2 mt-2">{res.desc}</p></div>
+                    <div className="flex-1 min-w-0"><h3 className="font-bold truncate text-gray-900">{res.title}</h3><p className="text-sm text-gray-500 line-clamp-2 mt-2">{res.desc}</p></div>
                   </Link>
                 );
               })}</div>}
@@ -197,7 +201,7 @@ export function Header() {
         )}
       </header>
 
-      {/* ANIMASI UANG AMAN */}
+      {/* ANIMASI UANG AMAN VERCEL */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes ex { 0% { transform: scale(1); opacity: 1; } 10% { transform: scale(1.4) rotate(10deg); opacity: 1; filter: brightness(1.2); } 100% { transform: scale(0); opacity: 0; } }
         @keyframes f1 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(-40px, 150px) scale(1) rotate(-45deg); opacity: 0; } }
@@ -206,29 +210,36 @@ export function Header() {
         @keyframes f4 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(-20px, 150px) scale(1) rotate(-90deg); opacity: 0; } }
         @keyframes f5 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(30px, 150px) scale(1) rotate(60deg); opacity: 0; } }
         .ea { animation: ex 0.5s ease-in forwards; }
-        .rp { position: absolute; top: 30%; left: 30%; font-weight: bold; pointer-events: none; text-shadow: 0px 2px 4px rgba(0,0,0,0.3); opacity: 0; }
-        .p1 { animation: f1 10s ease-out forwards; animation-delay: 0s; } .p2 { animation: f2 10s ease-out forwards; animation-delay: 0.1s; } .p3 { animation: f3 10s ease-out forwards; animation-delay: 0.2s; } .p4 { animation: f4 10s ease-out forwards; animation-delay: 0.3s; } .p5 { animation: f5 10s ease-out forwards; animation-delay: 0.15s; }
+        .rp { position: absolute; top: 30%; left: 30%; font-weight: bold; pointer-events: none; opacity: 0; text-shadow: 0px 2px 4px rgba(0,0,0,0.5); }
+        .p1 { animation: f1 10s ease-out forwards; animation-delay: 0s; color: #16a34a; } 
+        .p2 { animation: f2 10s ease-out forwards; animation-delay: 0.1s; color: #eab308; } 
+        .p3 { animation: f3 10s ease-out forwards; animation-delay: 0.2s; } 
+        .p4 { animation: f4 10s ease-out forwards; animation-delay: 0.3s; } 
+        .p5 { animation: f5 10s ease-out forwards; animation-delay: 0.15s; color: #ef4444; }
       `}} />
 
-      {/* WIDGET KADO */}
-      {showPromo && typeof document !== "undefined" && createPortal(
-        <div className="fixed top-[260px] left-4 z-[40]">
+      {/* WIDGET KADO (Tanpa Background Kotak, Text Stroke Hitam Anti-Buram) */}
+      {showPromo && createPortal(
+        <div className="fixed top-[250px] left-4 z-[40]">
           <div className="relative group flex flex-col items-center">
             <div className={`relative ${isExploding ? 'ea' : ''}`}>
               {isExploding && (
                 <>
-                  <div className="rp p1 text-green-600 text-[14px]">Rp 50K</div>
-                  <div className="rp p2 text-yellow-500 text-[16px]">Rp 100K</div>
-                  <div className="rp p3 text-green-500 text-[20px]">💸</div>
-                  <div className="rp p4 text-yellow-600 text-[18px]">🪙</div>
-                  <div className="rp p5 text-red-500 text-[14px]">Rp 200K</div>
+                  <div className="rp p1 text-[14px]">Rp 50K</div>
+                  <div className="rp p2 text-[16px]">Rp 100K</div>
+                  <div className="rp p3 text-[20px]">💸</div>
+                  <div className="rp p4 text-[18px]">🪙</div>
+                  <div className="rp p5 text-[14px]">Rp 200K</div>
                 </>
               )}
               {!isExploding && (
                 <a href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20mau%20cairkan%20dana%20nonton!" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center transition-transform hover:scale-110">
-                  <span className="text-[26px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">🎁</span>
+                  <span className="text-[28px] drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">🎁</span>
                   <div className={`transition-opacity duration-500 mt-0.5 ${fadeText ? 'opacity-100' : 'opacity-0'}`}>
-                    <span className="text-[9px] font-extrabold text-[#FF0000] drop-shadow-sm bg-white/70 px-1 rounded">{promoTexts[textIndex]}</span>
+                    {/* Teks tanpa background, diberi efek stroke hitam tebal agar terlihat di gambar apapun */}
+                    <span className="text-[10px] font-black text-white tracking-wider" style={{ textShadow: "1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0px 3px 5px rgba(0,0,0,0.9)" }}>
+                      {promoTexts[textIndex]}
+                    </span>
                   </div>
                 </a>
               )}
@@ -238,4 +249,4 @@ export function Header() {
       )}
     </>
   );
-}
+                             }
