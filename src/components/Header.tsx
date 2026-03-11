@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft, User, Clock } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, MoreVertical, Phone, Video, Paperclip, Camera, Smile } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -36,8 +36,13 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  // CS Info (Dijamin Wajah Manusia Asli, Bukan Botol)
-  const [csInfo] = useState({ name: "Tasya", img: "https://randomuser.me/api/portraits/women/44.jpg" });
+  // Data Profil CS Cewek Indonesia Berhijab (Pexels/Unsplash Asia)
+  const csData = [
+    { name: "Tasya", img: "https://images.pexels.com/photos/8101511/pexels-photo-8101511.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
+    { name: "Ayu", img: "https://images.pexels.com/photos/5119214/pexels-photo-5119214.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
+    { name: "Nisa", img: "https://images.pexels.com/photos/6105315/pexels-photo-6105315.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" }
+  ];
+  const [csInfo, setCsInfo] = useState({ name: "CS", img: "" });
   const [csSt, setCsSt] = useState("Online");
   const [chatMode, setChatMode] = useState('idle'); 
   
@@ -47,6 +52,7 @@ export function Header() {
   const [chatInput, setChatInput] = useState("");
   const [chats, setChats] = useState([]);
   const chatRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const { isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFlickReels, isFreeReels, platformInfo } = usePlatform();
   const dbRes = useSearchDramas(isDramaBox ? nQuery : "");
@@ -59,6 +65,8 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
+    setCsInfo(csData[Math.floor(Math.random() * csData.length)]);
+    
     const sBal = localStorage.getItem('habi_balance');
     if (sBal) setBalance(Number(sBal));
 
@@ -133,58 +141,70 @@ export function Header() {
     setChatOpen(true);
     if(chatMode === 'idle') {
       setChatMode('queue');
-      setCsSt("Mencari agen CS yang tersedia...");
+      setCsSt("Mencari CS yang tersedia...");
       setTimeout(() => {
-        setCsSt("Anda berada dalam antrean ke-2...");
+        setCsSt("Antrean ke-1...");
         setTimeout(() => {
           setChatMode('connected');
           setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku ${csInfo.name} dari tim CS Habi Music. Ada yang bisa dibantu? 😊` }]);
-        }, 3000);
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku ${csInfo.name} dari CS Habi Music. Ada yang bisa dibantu? 😊` }]);
+        }, 3500);
       }, 2500);
     }
   };
 
   // ==========================================
-  // OTAK AI (MENGGUNAKAN FREE AI API POLLINATIONS)
+  // OTAK AI REALISTIS + UPLOAD GAMBAR
   // ==========================================
-  const sendChat = async (e) => {
-    e.preventDefault();
-    if (!chatInput.trim() || chatMode !== 'connected') return;
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    sendChatCore(null, true, url);
+  };
+
+  const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); };
+
+  const sendChatCore = async (text, isImg = false, imgUrl = null) => {
+    if (!isImg && !text.trim()) return;
+    if (chatMode !== 'connected') return;
     
     const msgId = Date.now().toString();
     const tStr = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-    const userMsg = chatInput;
+    const userMsg = text;
     
-    setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:userMsg, status:'sent' }]);
-    setChatInput("");
+    setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:userMsg, img:imgUrl, status:'sent' }]);
+    if(!isImg) setChatInput("");
 
-    // Centang 2 Biru dlm 1-2 dtk
-    const readDelay = Math.floor(Math.random() * 1500) + 1000; 
+    // 1. Centang 2 Abu-abu (Terkirim) -> Tunggu 2-5 detik untuk dibaca (Centang Biru)
+    const readDelay = Math.floor(Math.random() * 3000) + 2000; 
     
     setTimeout(async () => {
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
-      setCsSt("Mengetik...");
+      setCsSt("Mengetik..."); // CS Mulai Ngetik
       
       let reply = "";
-      try {
-        // AI API Call (Nyambung ke segala hal)
-        const prompt = `Kamu adalah Tasya, wanita ramah asal Jawa Timur yang bekerja sebagai CS di aplikasi Habi Music (nonton video dapat uang). Jawab pertanyaan user ini dengan santai, singkat (1-2 kalimat), sopan, dan gunakan bahasa Indonesia gaul: "${userMsg}"`;
-        const aiRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
-        reply = await aiRes.text();
-      } catch(err) {
-        // Fallback jika API gagal
-        const fallbacks = ["Aduh maaf Kak, sinyalku lagi jelek nih 😅 Bisa diulangi pertanyaannya?", "Maaf Kak, sistem kami lagi sibuk banget. Gimana tadi?"];
-        reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      
+      if (isImg) {
+        reply = "Baik Kak, gambar/screenshotnya udah aku terima. Aku cek ke sistem dulu ya, untuk kendala ini lagi diproses sama tim terkait. Ditunggu updatenya 🙏";
+      } else {
+        try {
+          // PANGGIL AI API GRATIS (PINTAR & BISA JAWAB APA SAJA)
+          const prompt = `Berperanlah sebagai ${csInfo.name}, CS cewek dari aplikasi Habi Music (nonton video dapat uang). Kamu orang Jawa Timur, logatnya ramah, asyik, sopan. Jawab pertanyaan user berikut ini dengan logis, singkat (maks 2 kalimat), dan masuk akal. Jika ditanya hal di luar aplikasi, jawab santai tapi tetap arahkan ke Habi Music. Pertanyaan User: "${userMsg}"`;
+          
+          const aiRes = await fetch(`https://text.pollinations.ai/prompt/${encodeURIComponent(prompt)}`);
+          reply = await aiRes.text();
+        } catch(err) {
+          reply = "Maaf Kak, jaringanku lagi agak down nih 🙏 Boleh diulang pertanyaannya?";
+        }
       }
 
-      // Hitung Lama Ngetik (Makin panjang teks, makin lama ngetik)
-      // Minimal 4 detik, maksimal 15 detik.
-      const typingDuration = Math.min(Math.max(reply.length * 70, 4000), 15000); 
+      // 2. Waktu Ngetik Realistis (5 - 20 detik tergantung panjang jawaban)
+      const typingDuration = Math.min(Math.max(reply.length * 60, 5000), 20000); 
 
       setTimeout(() => {
         setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply }]);
-        setCsSt("Online");
+        setCsSt("Online"); // Selesai ngetik
       }, typingDuration);
       
     }, readDelay);
@@ -223,14 +243,14 @@ export function Header() {
               <button onClick={() => {setShowNotif(!showNotif); setChatOpen(false);}} className="p-2 rounded-full hover:bg-gray-100 relative"><Bell className="w-6 h-6 text-black" />{notifs.length > 0 && <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-[#FF0000] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{notifs.length}</span>}</button>
               
               {showNotif && createPortal(
-                <div className="fixed inset-0 sm:absolute sm:inset-auto sm:top-14 sm:right-0 w-full h-full sm:w-[380px] sm:h-auto bg-white sm:rounded-2xl shadow-2xl border-none sm:border border-gray-100 z-[99999] sm:z-50 overflow-hidden flex flex-col sm:max-h-[80vh]">
+                <div className="fixed inset-0 sm:absolute sm:inset-auto sm:top-14 sm:right-0 w-full h-full sm:w-[380px] sm:h-auto bg-white sm:rounded-2xl shadow-2xl border-none sm:border border-gray-100 z-[99999] sm:z-50 overflow-hidden flex flex-col sm:max-h-[85vh]">
                   
                   {!chatOpen ? (
                     <>
                       <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-100">
                         <h3 className="font-black text-base sm:text-sm text-gray-800">Pusat Notifikasi</h3>
                         <div className="flex gap-2">
-                          <button onClick={openChatCS} className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold hover:bg-green-200"><MessageCircle className="w-3 h-3"/> Chat CS</button>
+                          <button onClick={openChatCS} className="flex items-center gap-1 bg-[#25D366]/10 text-[#075e54] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#25D366]/20 transition-colors"><MessageCircle className="w-4 h-4"/> Chat CS</button>
                           <button onClick={()=>setShowNotif(false)} className="p-1"><X className="w-6 h-6 sm:w-5 sm:h-5 text-gray-500"/></button>
                         </div>
                       </div>
@@ -249,51 +269,78 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      {/* HEADER WA */}
-                      <div className="flex items-center gap-3 p-3 bg-[#075e54] text-white shadow-md z-10">
-                        <button onClick={()=>setChatOpen(false)} className="p-1 rounded-full hover:bg-white/20"><ArrowLeft className="w-6 h-6"/></button>
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center flex-shrink-0 border-2 border-white/30">
+                      {/* HEADER WHATSAPP ASLI */}
+                      <div className="flex items-center p-3 bg-[#075e54] text-white shadow-md z-10">
+                        <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer">
                           {csInfo.img ? <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-white"/>}
                         </div>
-                        <div className="flex flex-col"><span className="font-bold text-base leading-tight">CS - {csInfo.name.split(' ')[0]}</span><span className="text-[11px] font-medium opacity-90">{csSt}</span></div>
+                        <div className="flex flex-col flex-1 cursor-pointer">
+                          <span className="font-semibold text-base leading-tight">CS {csInfo.name}</span>
+                          <span className="text-[12px] opacity-90 truncate">{csSt}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-white ml-2">
+                          <Video className="w-5 h-5 cursor-pointer"/>
+                          <Phone className="w-5 h-5 cursor-pointer"/>
+                          <MoreVertical className="w-5 h-5 cursor-pointer"/>
+                        </div>
                       </div>
                       
-                      {/* BODY WA */}
-                      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 relative" style={{backgroundColor:'#e5ddd5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
-                        <div className="text-center text-[10px] text-gray-600 font-bold my-2 bg-white/60 backdrop-blur-sm self-center px-3 py-1 rounded-md shadow-sm">Hari ini</div>
+                      {/* BODY WHATSAPP ASLI */}
+                      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#e5ddd5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
+                        <div className="text-center text-[11px] text-gray-700 font-medium my-2 bg-[#D1EAF1] self-center px-4 py-1.5 rounded-lg shadow-sm">HARI INI</div>
                         
+                        {/* Pesan Enkripsi */}
+                        <div className="text-center text-[10px] text-gray-600 font-medium my-1 bg-[#FEF4C5] self-center px-3 py-2 rounded-lg shadow-sm w-[90%] leading-relaxed flex items-start gap-1">
+                           <div className="mt-0.5">🔒</div>
+                           <span>Pesan dan panggilan dienkripsi secara end-to-end. Tidak seorang pun di luar chat ini, termasuk Habi Music, yang dapat membaca atau mendengarkannya.</span>
+                        </div>
+
                         {chatMode === 'queue' && (
-                           <div className="self-center bg-yellow-100 text-yellow-800 text-xs px-4 py-2 rounded-full font-bold animate-pulse mt-4 flex items-center gap-2 shadow-sm border border-yellow-200">
-                             <Clock className="w-4 h-4" /> {csSt}
+                           <div className="self-center bg-white/90 text-gray-700 text-xs px-4 py-2 rounded-full font-bold animate-pulse mt-4 flex items-center gap-2 shadow-sm">
+                             <div className="w-3 h-3 border-2 border-[#075e54] border-t-transparent rounded-full animate-spin"></div> {csSt}
                            </div>
                         )}
 
                         {chatMode === 'connected' && chats.map(c => (
                           <div key={c.id} className={`flex flex-col max-w-[85%] ${c.sender === 'user' ? 'self-end' : 'self-start'}`}>
-                            <div className={`p-2.5 rounded-lg text-sm shadow-sm relative ${c.sender === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
-                              <p className="text-gray-800 break-words pr-2">{c.text}</p>
-                              <div className="flex items-center justify-end gap-1 mt-1 -mb-1 -mr-1">
-                                <span className="text-[9px] text-gray-500 font-medium">{c.time}</span>
-                                {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-blue-500"/> : <Check className="w-4 h-4 text-gray-400"/>)}
+                            <div className={`p-2 rounded-lg text-[14px] shadow-[0_1px_1px_rgba(0,0,0,0.1)] relative ${c.sender === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
+                              
+                              {c.img && <img src={c.img} className="w-full max-w-[200px] rounded-md mb-1 border border-gray-200" alt="uploaded"/>}
+                              {c.text && <p className="text-[#111111] break-words pr-12 pb-2 pl-1 leading-snug">{c.text}</p>}
+                              
+                              <div className="absolute right-1.5 bottom-1 flex items-center gap-1">
+                                <span className="text-[10px] text-gray-500 font-medium">{c.time.split(' ')[0]}</span>
+                                {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-[#34B7F1]"/> : <CheckCheck className="w-4 h-4 text-gray-400"/>)}
                               </div>
                             </div>
                           </div>
                         ))}
-                        
-                        {csSt === "Mengetik..." && (
-                           <div className="self-start bg-white p-3 rounded-lg rounded-tl-none shadow-sm flex items-center gap-1.5 mt-1">
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "0ms"}}></div>
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "150ms"}}></div>
-                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "300ms"}}></div>
-                           </div>
-                        )}
                       </div>
 
-                      {/* INPUT WA */}
-                      <form onSubmit={sendChat} className="p-2 bg-[#f0f0f0] flex gap-2 items-center">
-                        <input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder={chatMode === 'connected' ? "Ketik pesan..." : "Menunggu antrean..."} className="flex-1 bg-white rounded-full px-4 py-3 text-sm outline-none shadow-sm disabled:bg-gray-200"/>
-                        <button type="submit" disabled={chatMode !== 'connected'} className="bg-[#00a884] text-white p-3 rounded-full shadow-sm hover:bg-[#008f6f] disabled:bg-gray-400"><Send className="w-5 h-5 ml-0.5"/></button>
-                      </form>
+                      {/* INPUT WHATSAPP ASLI + FITUR GAMBAR */}
+                      <div className="p-2 bg-transparent flex gap-1.5 items-end relative z-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover' }}>
+                        <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm border border-gray-200 min-h-[44px]">
+                           <button className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0"><Smile className="w-6 h-6"/></button>
+                           <textarea 
+                             value={chatInput} 
+                             onChange={e=>setChatInput(e.target.value)} 
+                             disabled={chatMode !== 'connected'} 
+                             placeholder="Ketik pesan" 
+                             className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]"
+                             rows="1"
+                           />
+                           
+                           {/* FITUR UPLOAD GAMBAR */}
+                           <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                           <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0 disabled:opacity-50 transform -rotate-45"><Paperclip className="w-6 h-6"/></button>
+                           
+                           {chatInput.length === 0 && <button disabled={chatMode !== 'connected'} className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0 disabled:opacity-50"><Camera className="w-6 h-6"/></button>}
+                        </div>
+                        <button onClick={sendChat} disabled={chatMode !== 'connected' || chatInput.trim().length === 0} className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mb-0.5 transition-colors ${chatMode === 'connected' && chatInput.trim().length > 0 ? 'bg-[#00a884] hover:bg-[#008f6f]' : 'bg-gray-400'}`}>
+                          <Send className="w-5 h-5 text-white ml-1"/>
+                        </button>
+                      </div>
                     </>
                   )}
                 </div>, document.body
@@ -329,7 +376,7 @@ export function Header() {
       )}
 
       {showCoinMenu && createPortal(
-        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Menu Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);setPromoState('hidden');alert("Sistem uang dijeda. Saldo aman.");}} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
+        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Menu Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={actBerhenti} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
       )}
     </>
   );
