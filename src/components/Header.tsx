@@ -29,11 +29,16 @@ export function Header() {
   const [currentTime, setCurrentTime] = useState("");
   const [userCity, setUserCity] = useState("Indonesia");
 
-  // FITUR KADO (State: 'idle' 15s -> 'exploding' 10s -> 'hidden')
+  // FITUR KADO & ILUSI UANG BERJALAN
+  // state: 'idle' (15s kado) -> 'exploding' (10s ledakan) -> 'hidden' -> 'progress' (koin berjalan)
   const [promoState, setPromoState] = useState('idle'); 
-  const promoTexts = ["Klaim Rp10.000", "Tarik ke DANA", "Tonton = Cuan", "Tarik GoPay"];
+  const promoTexts = ["Klaim Rp 10.000", "Nonton Dibayar", "Tarik Saldo", "Bonus Cuan!"];
   const [textIndex, setTextIndex] = useState(0);
-
+  const [earnedMoney, setEarnedMoney] = useState(1500); // Saldo awal saat ilusi jalan
+  
+  // MODAL NOTIFIKASI PROFESIONAL
+  const [showCustomAlert, setShowCustomAlert] = useState(false);
+  
   const [showNotif, setShowNotif] = useState(false);
   const [notifs, setNotifs] = useState([]);
 
@@ -46,17 +51,32 @@ export function Header() {
       setShowLogo(isLogoView);
       loopTimer = setTimeout(() => runLoop(!isLogoView), isLogoView ? 20000 : 30000);
     };
-    runLoop(true); // Mulai dengan logo 20 detik
+    runLoop(true);
 
-    // LOGIKA KADO 25 DETIK
-    const t1 = setTimeout(() => {
-      setPromoState('exploding');
-      setTimeout(() => setPromoState('hidden'), 10000); // Hujan 10 detik lalu hilang
-    }, 15000);
+    // Timer Kado (15 Detik Diam -> 10 Detik Meledak)
+    let explodeTimer;
+    if (promoState === 'idle') {
+      explodeTimer = setTimeout(() => {
+        setPromoState('exploding');
+        setTimeout(() => setPromoState('hidden'), 10000); 
+      }, 15000);
+    }
 
+    // Rotasi Teks Kado
     const textInterval = setInterval(() => {
       setTextIndex(p => (p + 1) % promoTexts.length);
-    }, 2500);
+    }, 3000);
+
+    // Logika Uang Berjalan (Ilusi bertambah terus saat 'progress')
+    let progressTimer;
+    if (promoState === 'progress') {
+      progressTimer = setInterval(() => {
+        setEarnedMoney(prev => {
+          if (prev >= 10000) return 10000;
+          return prev + Math.floor(Math.random() * 55) + 15; // Bertambah random sedikit-sedikit
+        });
+      }, 3500);
+    }
 
     // Lacak IP
     fetch('https://get.geojs.io/v1/ip/geo.json')
@@ -71,19 +91,22 @@ export function Header() {
       setCurrentTime(`${d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })} | ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} ${offset === 8 ? "WITA" : offset === 9 ? "WIT" : "WIB"}`);
     }, 1000);
 
-    // Notif Pintar
+    // Notif Awal
     const active = [];
     const ytDel = localStorage.getItem('habi_yt_del');
     if (!ytDel || (new Date().getTime() - parseInt(ytDel)) / 3600000 >= 3) {
       active.push({ id: 'yt', type: 'youtube', time: 'Baru saja', text: "Dukung karya kami dengan {link} channel resmi kami." });
     }
     if (localStorage.getItem('habi_app_del') !== new Date().toLocaleDateString('id-ID')) {
-      active.push({ id: 'app', type: 'app', time: `${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`, text: "Sistem koin otomatis aktif! Tonton drama dan kumpulkan cuannya." });
+      active.push({ id: 'app', type: 'app', time: `${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`, text: "Jangan lupa klik kado di layar untuk mengaktifkan sistem cuan!" });
     }
     setNotifs(active);
 
-    return () => { clearTimeout(loopTimer); clearTimeout(t1); clearInterval(clockInterval); clearInterval(textInterval); };
-  }, []);
+    return () => { 
+      clearTimeout(loopTimer); clearTimeout(explodeTimer); 
+      clearInterval(clockInterval); clearInterval(textInterval); clearInterval(progressTimer);
+    };
+  }, [promoState]);
 
   const deleteNotif = (id) => {
     if (id === 'yt') localStorage.setItem('habi_yt_del', new Date().getTime().toString());
@@ -91,11 +114,24 @@ export function Header() {
     setNotifs(notifs.filter(n => n.id !== id));
   };
 
-  // AKSI ILUSI JIKA KADO DIKLIK
+  // KETIKA KADO DIKLIK
   const handleKadoClick = (e) => {
     e.preventDefault();
-    setPromoState('hidden'); // Sembunyikan kado
-    alert("✨ SISTEM KOIN DIAKTIFKAN!\n\nPersentase uang akan berjalan otomatis saat video diputar. Tonton sampai habis untuk mendapatkan Rp 10.000.\n\nCek menu 'Cairkan Dana' di layar utama untuk menarik saldo Anda!");
+    setShowCustomAlert(true); // Munculkan Modal Keren
+  };
+
+  // KETIKA PENGGUNA KLIK OKE PADA MODAL ALERT
+  const acceptBonus = () => {
+    setShowCustomAlert(false);
+    setPromoState('progress'); // Ubah kado jadi angka berjalan
+    
+    // Tambahkan notifikasi baru ke lonceng secara otomatis
+    setNotifs(prev => [{
+      id: 'sys_' + Date.now(),
+      type: 'app',
+      time: 'Baru saja',
+      text: '✨ Sistem koin berjalan aktif. Tonton drama untuk mengumpulkan Rp10.000!'
+    }, ...prev]);
   };
 
   const { isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFlickReels, isFreeReels, platformInfo } = usePlatform();
@@ -198,49 +234,78 @@ export function Header() {
         )}
       </header>
 
-      {/* ANIMASI UANG & EFEK KADO */}
+      {/* CUSTOM ALERT MODAL PROFESIONAL (Menggantikan Alert Bawaan) */}
+      {showCustomAlert && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] px-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl text-center relative overflow-hidden animate-in zoom-in-95">
+            {/* Latar Belakang Dekoratif */}
+            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-red-50 to-white"></div>
+            
+            {/* Logo Tengah */}
+            <div className="relative w-16 h-16 mx-auto bg-[#FF0000] rounded-2xl flex items-center justify-center shadow-lg mb-5 transform rotate-3">
+               <Play className="w-8 h-8 text-white fill-white ml-1" />
+            </div>
+            
+            <h3 className="text-xl font-black text-gray-900 mb-2">✨ SISTEM KOIN AKTIF!</h3>
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              Persentase uang akan berjalan otomatis saat video diputar. Tonton sampai habis untuk mendapatkan <span className="font-bold text-red-500">Rp 10.000</span>.
+            </p>
+            
+            <button onClick={acceptBonus} className="w-full bg-[#FF0000] text-white font-bold py-3.5 rounded-xl hover:bg-red-600 transition-colors shadow-md">
+              Mulai Kumpulkan Uang
+            </button>
+          </div>
+        </div>, document.body
+      )}
+
+      {/* ANIMASI CSS UANG JATUH (Diperbaiki agar meledaknya kelihatan) */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes ex { 0% { transform: scale(1); opacity: 1; } 10% { transform: scale(1.4) rotate(10deg); opacity: 1; filter: brightness(1.2); } 100% { transform: scale(0); opacity: 0; } }
-        @keyframes f1 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(-40px, 150px) scale(1) rotate(-45deg); opacity: 0; } }
-        @keyframes f2 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(50px, 150px) scale(1.2) rotate(30deg); opacity: 0; } }
-        @keyframes f3 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(0px, 150px) scale(1.5) rotate(180deg); opacity: 0; } }
-        @keyframes f4 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(-20px, 150px) scale(1) rotate(-90deg); opacity: 0; } }
-        .ea { animation: ex 0.5s ease-in forwards; }
-        .rp { position: absolute; top: 30%; left: 30%; font-weight: bold; pointer-events: none; opacity: 0; text-shadow: 0px 2px 4px rgba(0,0,0,0.5); }
-        .p1 { animation: f1 10s ease-out forwards; animation-delay: 0s; color: #16a34a; } .p2 { animation: f2 10s ease-out forwards; animation-delay: 0.1s; color: #eab308; } .p3 { animation: f3 10s ease-out forwards; animation-delay: 0.2s; } .p4 { animation: f4 10s ease-out forwards; animation-delay: 0.3s; } 
+        @keyframes kadoPop { 0% { transform: scale(1); } 50% { transform: scale(1.3) rotate(-10deg); filter: brightness(1.2); } 100% { transform: scale(0); opacity: 0; } }
+        @keyframes fall { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(var(--tx), 150px) scale(1.2) rotate(var(--rot)); opacity: 0; } }
         
-        .kado-text-shadow {
-           text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 0px 4px 6px rgba(0,0,0,0.8);
-        }
+        .kado-meledak { animation: kadoPop 0.5s ease-in forwards; }
+        .koin-hujan { position: absolute; top: 30%; left: 30%; font-weight: 900; pointer-events: none; opacity: 0; text-shadow: 0px 2px 4px rgba(0,0,0,0.4); animation: fall 10s ease-out forwards; }
       `}} />
 
-      {/* WIDGET KADO (Sembunyi jika state hidden) */}
+      {/* WIDGET KADO ATAU ANGKA BERJALAN (Area "62 Ep") */}
       {promoState !== 'hidden' && createPortal(
-        <div className="fixed top-[280px] left-6 z-[40]">
+        <div className="fixed top-[320px] left-6 z-[40]">
           <div className="relative flex flex-col items-center">
-            <div className={`relative flex flex-col items-center justify-center ${promoState === 'exploding' ? 'ea' : ''}`}>
-              
-              {promoState === 'exploding' && (
-                <>
-                  <div className="rp p1 text-[14px]">Rp 50K</div>
-                  <div className="rp p2 text-[16px]">Rp 100K</div>
-                  <div className="rp p3 text-[20px]">💸</div>
-                  <div className="rp p4 text-[18px]">🪙</div>
-                </>
-              )}
-              
-              {promoState === 'idle' && (
-                <button onClick={handleKadoClick} className="flex flex-col items-center justify-center transition-transform hover:scale-110 active:scale-95 outline-none">
-                  {/* Teks dipepetkan ke atas (mt-[-8px]) dan tanpa background kotak */}
-                  <span className="text-[32px] drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] relative z-10">🎁</span>
-                  <div className="mt-[-6px] relative z-20 transition-opacity duration-300">
-                    <span className="text-[11px] font-black text-white tracking-widest uppercase kado-text-shadow">
-                      {promoTexts[textIndex]}
-                    </span>
-                  </div>
-                </button>
-              )}
-            </div>
+            
+            {/* STATE: LEDAKAN HUJAN UANG */}
+            {promoState === 'exploding' && (
+              <div className="relative kado-meledak">
+                <div className="koin-hujan text-green-600 text-[14px]" style={{"--tx":"-40px", "--rot":"-45deg", animationDelay:"0s"}}>Rp 50K</div>
+                <div className="koin-hujan text-yellow-500 text-[16px]" style={{"--tx":"50px", "--rot":"30deg", animationDelay:"0.1s"}}>Rp 100K</div>
+                <div className="koin-hujan text-green-500 text-[20px]" style={{"--tx":"0px", "--rot":"180deg", animationDelay:"0.2s"}}>💸</div>
+                <div className="koin-hujan text-yellow-600 text-[18px]" style={{"--tx":"-20px", "--rot":"-90deg", animationDelay:"0.3s"}}>🪙</div>
+                <div className="koin-hujan text-red-500 text-[14px]" style={{"--tx":"30px", "--rot":"60deg", animationDelay:"0.15s"}}>Rp 200K</div>
+              </div>
+            )}
+            
+            {/* STATE: DIAM (KADO BISA DIKLIK) */}
+            {promoState === 'idle' && (
+              <button onClick={handleKadoClick} className="flex flex-col items-center justify-center transition-transform hover:scale-110 active:scale-95 outline-none">
+                <span className="text-[34px] drop-shadow-md relative z-10">🎁</span>
+                <div className="mt-[-8px] relative z-20">
+                  {/* Desain Teks Super Jelas (Pil Merah Solid) */}
+                  <span className="text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-md border border-white/50 whitespace-nowrap">
+                    {promoTexts[textIndex]}
+                  </span>
+                </div>
+              </button>
+            )}
+
+            {/* STATE: PROGRESS UANG BERJALAN ILUSI (Setelah diklik Ok) */}
+            {promoState === 'progress' && (
+              <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-yellow-200 flex items-center gap-1.5 animate-in fade-in zoom-in slide-in-from-bottom-5">
+                <span className="text-[14px] animate-spin-slow">🪙</span>
+                <span className="text-[11px] font-bold text-gray-800">
+                  Rp {earnedMoney.toLocaleString('id-ID')}
+                </span>
+              </div>
+            )}
+
           </div>
         </div>, document.body
       )}
