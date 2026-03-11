@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import Image from "next/image";
 import { Search, X, Play } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
@@ -251,3 +250,247 @@ export function Header() {
                       <Link
                         key={book.book_id}
                         href={`/detail/reelshort/${book.book_id}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={book.book_pic}
+                          alt={book.book_title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{book.book_title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                            {book.special_desc}
+                          </p>
+                          {book.theme && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {book.theme.slice(0, 3).map((tag: string, idx: number) => (
+                                <span key={idx} className="tag-pill text-[10px]">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {book.book_mark?.text && (
+                            <span
+                              className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold"
+                              style={{
+                                backgroundColor: book.book_mark.color || "#E52E2E",
+                                color: book.book_mark.text_color || "#FFFFFF",
+                              }}
+                            >
+                              {book.book_mark.text}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* NetShort Results */}
+                {isNetShort && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((drama: any, index: number) => (
+                      <Link
+                        key={drama.shortPlayId}
+                        href={`/detail/netshort/${drama.shortPlayId}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={drama.cover}
+                          alt={drama.title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
+                          {drama.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                              {drama.description}
+                            </p>
+                          )}
+                          {drama.labels && drama.labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {drama.labels.slice(0, 3).map((tag: string, idx: number) => (
+                                <span key={idx} className="tag-pill text-[10px]">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {drama.heatScore && (
+                            <span className="inline-block mt-2 text-[10px] text-muted-foreground">
+                              {drama.heatScore}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* ShortMax Results */}
+                {isShortMax && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((drama: any, index: number) => (
+                      <Link
+                        key={`${drama.shortPlayId}-${index}`}
+                        href={`/detail/shortmax/${drama.shortPlayId}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={drama.cover}
+                          alt={drama.title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{drama.title}</h3>
+                          {drama.genre && drama.genre.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {drama.genre.slice(0, 3).map((tag: string, idx: number) => (
+                                <span key={idx} className="tag-pill text-[10px]">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* Melolo Results */}
+                {isMelolo && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((book: any, index: number) => (
+                      <Link
+                        key={book.book_id}
+                        href={`/detail/melolo/${book.book_id}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="w-16 h-24 bg-muted rounded-xl flex-shrink-0 overflow-hidden">
+                          {book.thumb_url ? (
+                            <img
+                              src={book.thumb_url.includes(".heic") 
+                                ? `https://wsrv.nl/?url=${encodeURIComponent(book.thumb_url)}&output=jpg` 
+                                : book.thumb_url}
+                              alt={book.book_name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <span className="text-xs text-muted-foreground">No Img</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{book.book_name}</h3>
+                          {book.abstract && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                              {book.abstract}
+                            </p>
+                          )}
+                          {book.stat_infos && book.stat_infos.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                               <span className="tag-pill text-[10px]">
+                                  {book.stat_infos[0]}
+                               </span>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* FlickReels Results */}
+                {isFlickReels && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((book: any, index: number) => (
+                      <Link
+                        key={book.playlet_id}
+                        href={`/detail/flickreels/${book.playlet_id}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={book.cover}
+                          alt={book.title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{book.title}</h3>
+                          {book.introduce && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                              {book.introduce}
+                            </p>
+                          )}
+                          {book.tag_list && book.tag_list.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {book.tag_list.slice(0, 3).map((tag: any, idx: number) => (
+                                <span key={idx} className="tag-pill text-[10px]">
+                                  {tag.tag_name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* FreeReels Results */}
+                {isFreeReels && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((book: any, index: number) => (
+                      <Link
+                        key={book.key || index}
+                        href={`/detail/freereels/${book.key}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={book.coverUrl || book.cover || ""}
+                          alt={book.title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{book.title}</h3>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </header>
+  );
+}
