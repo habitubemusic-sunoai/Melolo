@@ -321,4 +321,216 @@ export function Header() {
           const currentBalanceRp = balance.toLocaleString('id-ID');
           
           if(isImg) reply = `Gambarnya udah ${csInfo.name} terima ya Kak 🙏 ${csInfo.name} cek saldo Kakak sekarang ada Rp ${currentBalanceRp}. Semangat kumpulin koinnya ya Kak!`;
-          else if (lText.match(/ai|bot|robot|asli|manusia|orang/)) reply = `Aku
+          else if (lText.match(/ai|bot|robot|asli|manusia|orang/)) reply = `Aku beneran orang asli kok Kak hehe 😂, kerjanya standby balas chat Kakak di kantor pusat Jember. Ada yang bisa ${csInfo.name} bantu?`;
+          else if (lText.match(/berapa|saldo|uangku/)) reply = `Saldo Kakak saat ini yang tercatat di sistem kami adalah Rp ${currentBalanceRp} ya Kak 😊 Kumpulkan sampai 100rb biar bisa dicairkan.`;
+          else if (lText.match(/mantap|keren|bagus/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya Kak. Ada lagi yang bisa dibantu?`;
+          else if (lText.match(/marah|lama|buruk|jelek/)) reply = `Mohon maaf yang sebesar-besarnya atas ketidaknyamanan ini ya Kak 🙏 Kami akan terus memperbaiki pelayanan kami.`;
+          else if (lText.match(/\b(assalamu|salam)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu?`;
+          else if (lText.match(/cair|tarik|dana/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak. Proses 1-3 hari kerja 😊";
+          else reply = `Maaf Kak, koneksi sistem CS kami agak terganggu 🙏 Tapi Kakak tenang aja, saldo Kakak saat ini Rp ${currentBalanceRp} aman di sistem kok.`;
+        }
+
+        const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2500), 7000);
+        const typingDuration = baseTyping + Math.floor(Math.random() * 1000); 
+
+        setTimeout(() => {
+          setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply.replace(/\*/g,'') }]);
+          setCsSt("Online");
+        }, typingDuration);
+
+      }, thinkDelay);
+
+    }, readDelay);
+  };
+
+  if(!isMounted || pathname?.startsWith("/watch")) return null;
+
+  return (
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4 flex items-center justify-between h-[60px]">
+          <Link href="/" className="relative flex-1 h-12 flex items-center overflow-hidden">
+            <div className={`absolute left-0 transition-all duration-700 flex items-center gap-1 overflow-hidden px-1 py-1 ${showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6 pointer-events-none'}`}>
+              {showLogo && <style dangerouslySetInnerHTML={{__html: `.cahaya-kilau { position: absolute; top: 0; left: -150%; width: 150%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent); transform: skewX(-25deg); animation: kilauAnimasi 1.8s ease-in-out 0.2s forwards; z-index: 20; pointer-events: none; } @keyframes kilauAnimasi { 0% { left: -150%; } 100% { left: 150%; } }`}} />}
+              <div className="cahaya-kilau"></div>
+              <div className="w-[30px] h-[20px] rounded-[5px] bg-[#FF0000] flex items-center justify-center relative z-10"><Play className="w-3 h-3 text-white fill-white ml-0.5" /></div>
+              <span className="font-sans font-bold text-[22px] tracking-tighter text-black relative z-10 mt-[1px]">Habi Music</span>
+            </div>
+            <div className={`absolute left-0 w-full transition-all duration-700 flex flex-col justify-center ${!showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'}`}>
+              <div className="flex items-center gap-1 text-gray-900 font-bold text-[10px] sm:text-xs"><MapPin className="w-3 h-3 text-[#FF0000] flex-shrink-0" /><span className="truncate max-w-[150px] sm:max-w-[250px]">{userCity}</span></div>
+              <div className="text-gray-500 font-mono text-[9px] sm:text-[10px] ml-4 tracking-tight">{currentTime.split(' | ')[1]}</div>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-1">
+            <div className="relative">
+              <button onClick={() => {setShowNotif(!showNotif); setChatOpen(false);}} className="p-2 rounded-full hover:bg-gray-100 relative"><Bell className="w-6 h-6 text-black" />{notifs.length > 0 && <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-[#FF0000] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{notifs.length}</span>}</button>
+              
+              {showNotif && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 sm:absolute sm:inset-auto sm:top-14 sm:right-0 w-full h-full sm:w-[380px] sm:h-auto bg-white sm:rounded-2xl shadow-2xl border-none sm:border border-gray-100 z-[99999] sm:z-50 overflow-hidden flex flex-col sm:max-h-[85vh]">
+                  
+                  {!chatOpen ? (
+                    <>
+                      <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-100">
+                        <h3 className="font-black text-base sm:text-sm text-gray-800">Pusat Notifikasi</h3>
+                        <div className="flex gap-2">
+                          <button onClick={openChatCS} className="flex items-center gap-1 bg-[#25D366]/10 text-[#075e54] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#25D366]/20 transition-colors"><MessageCircle className="w-4 h-4"/> Chat CS</button>
+                          <button onClick={()=>setShowNotif(false)} className="p-1"><X className="w-6 h-6 sm:w-5 sm:h-5 text-gray-500"/></button>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-y-auto bg-white p-3" ref={chatRef}>
+                        {notifs.length > 0 ? notifs.map(n => (
+                          <div key={n.id} className={`flex gap-3 p-3 rounded-xl mb-3 border ${n.type==='withdraw'?'bg-blue-50 border-blue-100': n.type==='postchat'?'bg-green-50 border-green-100': n.type==='news'?'bg-[#FFF9E6] border-[#FFE5B4]':'bg-white border-gray-100 shadow-sm'}`}>
+                            
+                            <div className={`w-10 h-10 rounded-full flex justify-center items-center flex-shrink-0 border shadow-sm ${n.type==='withdraw'?'bg-blue-50 border-blue-100 text-blue-500 font-bold':n.type==='postchat'?'bg-[#25D366] border-green-200 text-white':n.type==='news'?'bg-[#FFB703] border-[#FFA500] text-white':'bg-white border-gray-100'}`}>
+                              {n.type==='withdraw' ? 'Rp' : n.type==='postchat' ? <MessageCircle className="w-5 h-5"/> : n.type==='news' ? <Bell className="w-5 h-5"/> : <div className="w-[18px] h-[12px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>}
+                            </div>
+
+                            <div className="flex-1 pr-2">
+                              <div className="flex flex-col mb-1.5">
+                                <span className="font-bold text-xs text-gray-900 leading-tight">{n.title}</span>
+                                <span className="text-[9px] font-bold text-gray-400 mt-0.5">{n.time}</span>
+                              </div>
+                              <p className="text-xs text-gray-600 font-medium leading-relaxed">{n.type==='youtube'?<>{n.text.split('{link}')[0]}<a href="https://youtube.com/@habientertainmentofficial" target="_blank" className="text-[#FF0000] font-bold underline">Subscribe</a>{n.text.split('{link}')[1]}</>:n.text}</p>
+                              
+                              {n.type === 'postchat' && (
+                                <div className="mt-3 border-t border-green-200 pt-3">
+                                   <p className="text-[10px] text-gray-500 mb-2">Butuh bantuan manual lebih lanjut?</p>
+                                   <a href="https://wa.me/6285119821813" target="_blank" rel="noopener noreferrer" className="relative overflow-hidden inline-flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-1.5 rounded-full text-[10px] font-bold shadow-sm hover:scale-105 transition-transform">
+                                      <style dangerouslySetInnerHTML={{__html: `.shimmer-wa { position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent); transform: skewX(-20deg); animation: shimmer 2.5s infinite; } @keyframes shimmer { 100% { left: 200%; } }`}} />
+                                      <div className="shimmer-wa"></div>
+                                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.88-.653-1.473-1.46-1.646-1.757-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                      WhatsApp Official
+                                   </a>
+                                   <div className="text-[8px] text-green-600/70 font-semibold text-center mt-4 tracking-wide">
+                                      © Habi Management Official - {currentYear}
+                                   </div>
+                                </div>
+                              )}
+                            </div>
+                            <button onClick={()=>{
+                              const newNotifs = notifs.filter(x=>x.id!==n.id);
+                              setNotifs(newNotifs);
+                              if(n.id==='yt') localStorage.setItem('habi_yt_del',Date.now().toString());
+                              if(newNotifs.length === 0) localStorage.removeItem('habi_notifs');
+                            }} className="text-gray-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button>
+                          </div>
+                        )) : <div className="py-10 text-center text-gray-400 text-sm font-medium">Belum ada notifikasi.</div>}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center p-3 bg-[#f0f2f5] text-gray-900 shadow-sm z-10 border-b border-gray-200">
+                        <button onClick={handleBackOut} className="flex items-center hover:bg-gray-200 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6 text-gray-600"/></button>
+                        
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 relative border border-gray-300">
+                           <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" />
+                        </div>
+
+                        <div className="flex flex-col flex-1">
+                          <span className="font-semibold text-base leading-tight text-gray-900">CS {csInfo.name}</span>
+                          <span className="text-[12px] text-gray-500 truncate">{csSt}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-gray-600 ml-2">
+                          <Video className="w-5 h-5 cursor-not-allowed opacity-50"/>
+                          <Phone className="w-5 h-5 cursor-not-allowed opacity-50"/>
+                          
+                          {chatMode === 'connected' ? (
+                            <button onClick={() => setShowEndModal(true)} className="p-1 hover:bg-gray-200 rounded-full transition-colors relative" title="Akhiri Obrolan">
+                              <MoreVertical className="w-5 h-5 text-gray-600"/>
+                              <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse border border-white"></div>
+                            </button>
+                          ) : (
+                            <MoreVertical className="w-5 h-5 cursor-not-allowed opacity-50"/>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#efeae2', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover', backgroundBlendMode: 'overlay'}} ref={chatRef}>
+                        <div className="text-center text-[11px] text-gray-700 font-medium my-2 bg-white/90 self-center px-4 py-1.5 rounded-lg shadow-sm">HARI INI</div>
+                        <div className="text-center text-[10px] text-gray-600 font-medium my-1 bg-[#FEF4C5] self-center px-3 py-2 rounded-lg shadow-sm w-[90%] leading-relaxed flex items-start gap-1"><div className="mt-0.5">🔒</div><span>Pesan dan panggilan dienkripsi secara end-to-end. Tidak ada orang di luar obrolan ini, bahkan Habi Music, yang dapat membaca atau mendengarkannya.</span></div>
+
+                        {chatMode === 'queue' && (
+                           <div className="self-center bg-white text-gray-700 text-xs px-4 py-2 rounded-full font-bold mt-4 flex items-center gap-2 shadow-sm"><div className="w-3 h-3 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin"></div> {csSt}</div>
+                        )}
+
+                        {chats.map(c => (
+                          <div key={c.id} className={`flex flex-col max-w-[85%] ${c.sender === 'user' ? 'self-end' : 'self-start'}`}>
+                            <div className={`p-2 rounded-lg text-[15px] shadow-sm relative ${c.sender === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
+                              {c.img && <img src={c.img} className="w-full max-w-[200px] rounded-md mb-1 border border-gray-200" alt="uploaded"/>}
+                              {c.text && <p className="text-[#111111] break-words pr-14 pb-1 pl-1 leading-snug">{c.text}</p>}
+                              <div className="absolute right-1.5 bottom-1 flex items-center gap-1">
+                                <span className="text-[10px] text-gray-500 font-medium">{c.time.split(' ')[0]}</span>
+                                {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-[#53bdeb]"/> : <CheckCheck className="w-4 h-4 text-gray-400"/>)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-2 bg-transparent flex gap-1.5 items-end relative z-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover' }}>
+                        {chatMode === 'ended' ? (
+                          <button onClick={resetChat} className="w-full bg-[#00a884] text-white font-bold py-3 rounded-full shadow-md hover:bg-[#008f6f] transition-colors">
+                             Mulai Obrolan Baru
+                          </button>
+                        ) : (
+                          <>
+                            {showEmoji && (
+                              <div className="absolute bottom-[60px] left-2 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 grid grid-cols-8 gap-2 w-[90%] z-50 animate-in slide-in-from-bottom-2">
+                                {emojis.map(e => <button type="button" key={e} onClick={() => setChatInput(p => p+e)} className="text-xl hover:scale-125 transition-transform">{e}</button>)}
+                              </div>
+                            )}
+                            <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm min-h-[44px]">
+                              <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2 flex-shrink-0 ${showEmoji ? 'text-[#00a884]' : 'text-gray-500'}`}><Smile className="w-6 h-6"/></button>
+                              <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
+                              <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                              <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 flex-shrink-0 transform -rotate-45 ml-1 mr-1 hover:text-[#00a884]"><Paperclip className="w-6 h-6"/></button>
+                            </div>
+                            <button onClick={sendChat} disabled={chatMode !== 'connected' || chatInput.trim().length === 0} className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mb-0.5 transition-colors ${chatMode === 'connected' && chatInput.trim().length > 0 ? 'bg-[#00a884]' : 'bg-gray-400'}`}>
+                              <Send className="w-5 h-5 text-white ml-1"/>
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {showEndModal && (
+                        <div className="fixed inset-0 z-[1000000] bg-black/50 backdrop-blur-sm flex items-end justify-center animate-in fade-in duration-200">
+                          <div className="bg-white w-full sm:max-w-md rounded-t-3xl p-6 animate-in slide-in-from-bottom-10 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                            <div className="w-14 h-1.5 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                            <h3 className="text-xl font-black text-gray-900 text-center mb-2">Akhiri Sesi Bantuan?</h3>
+                            <p className="text-sm text-gray-500 text-center font-medium mb-8 px-4">Sesi obrolan ini akan ditutup. Pastikan semua pertanyaan Kakak sudah terjawab.</p>
+                            <div className="flex flex-col gap-3">
+                              <button onClick={confirmEndChat} className="w-full bg-[#ff3b30] hover:bg-[#d63026] text-white font-bold py-3.5 rounded-2xl active:scale-95 transition-all shadow-md">Akhiri Obrolan</button>
+                              <button onClick={()=>setShowEndModal(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3.5 rounded-2xl active:scale-95 transition-all">Batal</button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>, document.body
+              )}
+            </div>
+            <button onClick={() => setSearchOpen(true)} className="p-2 rounded-full hover:bg-gray-100"><Search className="w-6 h-6 text-black" /></button>
+          </div>
+        </div>
+      </header>
+
+      {videoToast && typeof document !== 'undefined' && createPortal(<div className="fixed top-[80px] left-1/2 -translate-x-1/2 z-[99999] bg-black/80 text-white px-4 py-2 rounded-full shadow-lg font-bold text-xs flex items-center gap-2 animate-in fade-in"><span className="text-yellow-400">🪙</span> {videoToast}</div>, document.body)}
+      <style dangerouslySetInnerHTML={{__html: `@keyframes kp{0%{transform:scale(1)}5%{transform:scale(1.15) rotate(10deg)}10%{transform:scale(1) rotate(0deg)}100%{transform:scale(1)}}.kh{animation:kp 27s infinite}.bk{background:radial-gradient(circle at top left,#fbbf24,#d97706)}@keyframes kd{0%{transform:scale(1)}50%{transform:scale(1.3) rotate(-10deg);filter:brightness(1.2)}100%{transform:scale(0);opacity:0}}@keyframes f{0%{transform:translate(0,0) scale(0.5);opacity:1}100%{transform:translate(var(--tx),150px) scale(1.2) rotate(var(--rot));opacity:0}}.km{animation:kd 0.5s forwards}.ku{position:absolute;top:30%;left:30%;font-weight:900;pointer-events:none;opacity:0;animation:f 10s ease-out forwards}`}} />
+
+      {promoState !== 'hidden' && typeof document !== 'undefined' && createPortal(
+        <div className="fixed top-[320px] left-6 z-[40]">
+          {promoState === 'exploding' && (<div className="relative km"><div className="ku text-green-600 text-[14px]" style={{"--tx":"-40px","--rot":"-45deg",animationDelay:"0s"}}>Rp 50K</div><div className="ku text-yellow-500 text-[16px]" style={{"--tx":"50px","--rot":"30deg",animationDelay:"0.1s"}}>Rp 100K</div><div className="ku text-green-500 text-[20px]" style={{"--tx":"0px","--rot":"180deg",animationDelay:"0.2s"}}>💸</div><div className="ku text-yellow-600 text-[18px]" style={{"--tx":"-20px","--rot":"-90deg",animationDelay:"0.3s"}}>🪙</div><div className="ku text-red-500 text-[14px]" style={{"--tx":"30px","--rot":"60deg",animationDelay:"0.15s"}}>Rp 200K</div></div>)}
+          {promoState === 'idle' && (<button onClick={()=>{setPromoState('progress'); setNotifs(p=>[{id:'sys',type:'app',time:getFullDate(),title:'Sistem Aktif',text:'✨ Sistem deteksi nonton aktif! Diam & fokus nonton video untuk hasilkan saldo otomatis.'},...p]);}} className="flex flex-col items-center hover:scale-110 outline-none"><span className="text-[34px] drop-shadow-md relative z-10">🎁</span><div className="mt-[-8px] relative z-20"><span className="text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-md border border-white/50">{pTexts[tIdx]}</span></div></button>)}
+          {promoState === 'progress' && (<button onClick={() => setShowCoinMenu(true)} className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.15)] border-2 border-yellow-300 kh"><div className="w-6 h-6 rounded-full bk flex items-center justify-center text-white font-black text-[12px] shadow-inner border border-yellow-200">Rp</div><span className="text-[13px] font-black text-gray-800 tracking-tight">{balance.toLocaleString('id-ID')}</span></button>)}
+        </div>, document.body
+      )}
+
+      {showCoinMenu && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Menu Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);setPromoState('hidden');alert("Sistem uang dijeda. Saldo aman.");}} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
+      )}
+    </>
+  );
+}
