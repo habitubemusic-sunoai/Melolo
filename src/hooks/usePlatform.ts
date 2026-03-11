@@ -11,7 +11,14 @@ export interface PlatformInfo {
   apiBase: string;
 }
 
+// URUTAN APLIKASI DIUBAH DI SINI
 export const PLATFORMS: PlatformInfo[] = [
+  {
+    id: "melolo",
+    name: "Melolo",
+    logo: "/melolo.webp",
+    apiBase: "/api/melolo",
+  },
   {
     id: "dramabox",
     name: "DramaBox",
@@ -37,12 +44,6 @@ export const PLATFORMS: PlatformInfo[] = [
     apiBase: "/api/netshort",
   },
   {
-    id: "melolo",
-    name: "Melolo",
-    logo: "/melolo.webp",
-    apiBase: "/api/melolo",
-  },
-  {
     id: "flickreels",
     name: "FlickReels",
     logo: "/flickreels.png",
@@ -62,7 +63,8 @@ interface PlatformState {
 }
 
 export const usePlatformStore = create<PlatformState>((set) => ({
-  currentPlatform: "dramabox",
+  // Mengubah default halaman awal menjadi Melolo
+  currentPlatform: "melolo",
   setPlatform: (platform) => set({ currentPlatform: platform }),
 }));
 
