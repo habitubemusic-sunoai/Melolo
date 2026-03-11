@@ -5,50 +5,37 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { history, message, image } = body;
     
-    // Mengambil kunci dari Brankas Vercel
+    // Ambil kunci dari Vercel
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("AIzaSyAZQjMfYaXAViJYepVHHgwSE98wR5JCA5g");
 
-    if (!apiKey) {
-      return NextResponse.json({ reply: "Maaf Kak, Kunci API rahasia belum dipasang di Vercel nih 🙏" });
-    }
+    // Format chat dijadikan satu paragraf agar Google tidak bingung
+    let chatContext = "Kamu CS Habi Music (Cewek Jawa Timur). Jawab santai, logis, maks 2 kalimat.\nRiwayat:\n";
+    history.forEach((chat: any) => {
+      chatContext += `${chat.sender === 'user' ? 'User' : 'Kamu'}: ${chat.text}\n`;
+    });
+    chatContext += `\nPesan Baru User: ${message}\nBalasanmu:`;
 
-    // 1. Susun Ingatan (Memori Chat Sebelumnya)
-    const contents = history.map((chat: any) => ({
-      role: chat.sender === "user" ? "user" : "model",
-      parts: [{ text: chat.text || "halo" }]
-    }));
+    const parts: any[] = [{ text: chatContext }];
 
-    // 2. Tambahkan Pesan Baru & Gambar (Jika ada Screenshot)
-    const currentParts: any[] = [{ text: message }];
     if (image && image.base64) {
-      currentParts.push({
-        inline_data: {
-          mime_type: image.mimeType,
-          data: image.base64
-        }
-      });
+      parts.push({ inline_data: { mime_type: image.mimeType, data: image.base64 } });
     }
-    contents.push({ role: "user", parts: currentParts });
 
-    // 3. Tembak Langsung ke Server Google Gemini (Tanpa Paket Tambahan!)
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents })
+      body: JSON.stringify({ contents: [{ role: "user", parts: parts }] })
     });
 
     const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Gemini Error:", data);
-      return NextResponse.json({ reply: "Maaf Kak, jaringanku ke server lagi padat banget nih 🙏 Boleh diulang?" });
-    }
+    if (!res.ok) throw new Error("GEMINI_ERROR");
 
     const reply = data.candidates[0].content.parts[0].text;
     return NextResponse.json({ reply: reply.replace(/\*/g, '') });
 
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ reply: "Maaf Kak, sistem aku lagi agak nge-lag 🙏 Sebentar ya." });
+    // Jika Gemini gagal, kembalikan status 500 agar UI pakai Otak Cadangan
+    return NextResponse.json({ error: "FAILED" }, { status: 500 });
   }
 }
