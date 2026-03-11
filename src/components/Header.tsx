@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, Paperclip, Smile, Video, Phone, MoreVertical } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, Paperclip, Smile } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -87,11 +87,8 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    if(isMounted && notifs.length > 0) {
-      localStorage.setItem('habi_notifs', JSON.stringify(notifs));
-    } else if (isMounted && notifs.length === 0) {
-      localStorage.removeItem('habi_notifs');
-    }
+    if(isMounted && notifs.length > 0) localStorage.setItem('habi_notifs', JSON.stringify(notifs));
+    else if (isMounted && notifs.length === 0) localStorage.removeItem('habi_notifs');
   }, [notifs, isMounted]);
 
   useEffect(() => {
@@ -117,13 +114,8 @@ export function Header() {
     if(isMounted) {
       const today = new Date().toDateString();
       if(localStorage.getItem('habi_news_date') !== today) {
-        const newsData = [
-          "Kabar Gembira! Server VPS sudah ON lagi memakai RAM 60GB seharga 900rb/bulan! Akses dijamin lebih wuzz. Ayo lanjut nonton biar saldonya nambah!",
-          "Event Spesial Hari Ini! Selesaikan episode drama pilihanmu untuk mengklaim koin uang tunai. Semakin sering nonton, makin cepat cair ke DANA/Gopay!",
-          "Jangan lupa! Habi Music membayar Kakak untuk setiap video yang ditonton. Fokus rebahan, diam nonton, koin ngalir sendirinya."
-        ];
+        const newsData = ["Kabar Gembira! Server VPS sudah ON lagi memakai RAM 60GB seharga 900rb/bulan! Akses dijamin lebih wuzz. Ayo lanjut nonton biar saldonya nambah!", "Event Spesial Hari Ini! Selesaikan episode drama pilihanmu untuk mengklaim koin uang tunai. Semakin sering nonton, makin cepat cair ke DANA/Gopay!", "Jangan lupa! Habi Music membayar Kakak untuk setiap video yang ditonton. Fokus rebahan, diam nonton, koin ngalir sendirinya."];
         const rNews = newsData[Math.floor(Math.random() * newsData.length)];
-        
         setNotifs(prev => {
           const filtered = prev.filter(n => n.type !== 'news'); 
           return [{ id: 'news_'+Date.now(), type: 'news', time: getFullDate(), title: 'Info Sistem Habi Music', text: rNews }, ...filtered];
@@ -150,12 +142,9 @@ export function Header() {
           if(n.type === 'withdraw') {
             const elapsed = Date.now() - n.timestamp;
             if(elapsed > 43200000 && n.status !== 'berhasil') {
-              changed = true;
-              return { ...n, status: 'berhasil', time: getFullDate(), text: `✅ BERHASIL: Penarikan Rp100.000 sudah berhasil ditransfer ke rekening Kakak!` };
-            } 
-            else if (elapsed > 180000 && n.status === 'pending') {
-              changed = true;
-              return { ...n, status: 'proses', time: getFullDate(), text: `⚙️ DIPROSES: Penarikan Rp100.000 sedang dikirimkan oleh bank. Mohon ditunggu ya Kak.` };
+              changed = true; return { ...n, status: 'berhasil', time: getFullDate(), text: `✅ BERHASIL: Penarikan Rp100.000 sudah berhasil ditransfer ke rekening Kakak!` };
+            } else if (elapsed > 180000 && n.status === 'pending') {
+              changed = true; return { ...n, status: 'proses', time: getFullDate(), text: `⚙️ DIPROSES: Penarikan Rp100.000 sedang dikirimkan oleh bank. Mohon ditunggu ya Kak.` };
             }
           }
           return n;
@@ -203,7 +192,6 @@ export function Header() {
     const endMsgs = [
       `Terima kasih sudah menghubungi CS Habi Music Kak! 🙏 Jangan lupa lanjut nonton episode dramanya biar saldo cepat 100rb dan bisa dicairkan ya 😊`,
       `Sesi chat telah berakhir. Semangat terus kumpulin koinnya dari nonton drama ya Kak! Kalau ada kendala penarikan DANA, CS ${csInfo.name} selalu siap bantu 🙏`,
-      `Halo Kak, obrolan bantuan tadi sudah ditutup ya. Ingat, Habi Music selalu siap bantu Kakak mencairkan uang tunai dari nonton drama. Sehat selalu! ✨`,
       `Pesan dari CS ${csInfo.name}: Terima kasih Kak! Terus nikmati tontonan drama pendek kami dan raih cuannya. Kalau butuh bantuan teknis, hubungi Official kami 🙏`
     ];
     const randMsg = endMsgs[Math.floor(Math.random() * endMsgs.length)];
@@ -214,8 +202,7 @@ export function Header() {
     if (chatMode === 'connected') {
       clearTimeout(idleChatTimeout.current);
       idleChatTimeout.current = setTimeout(() => {
-        setChatMode('ended');
-        setCsSt("Offline");
+        setChatMode('ended'); setCsSt("Offline");
         setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Assalamualaikum Kak 🙏 Karena sudah 3 menit tidak ada respons, obrolan ini ${csInfo.name} akhiri dulu ya. Jangan lupa lanjut nonton dramanya biar koinnya cepat ditarik! 😊` }]);
         sendPostChatNotif(); 
       }, 180000); 
@@ -228,8 +215,7 @@ export function Header() {
     if(chatMode === 'idle') {
       hasNotified.current = false;
       const rCS = csList[Math.floor(Math.random() * csList.length)];
-      setCsInfo(rCS);
-      setChatMode('queue'); setCsSt("Mencari CS...");
+      setCsInfo(rCS); setChatMode('queue'); setCsSt("Mencari CS...");
       setTimeout(() => {
         setCsSt("Antrean ke-1...");
         setTimeout(() => {
@@ -246,10 +232,7 @@ export function Header() {
   };
 
   const confirmEndChat = () => {
-    setShowEndModal(false);
-    setChatMode('ended');
-    setCsSt("Offline");
-    clearTimeout(idleChatTimeout.current);
+    setShowEndModal(false); setChatMode('ended'); setCsSt("Offline"); clearTimeout(idleChatTimeout.current);
     setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Baik Kak, obrolan ini ${csInfo.name} tutup ya 🙏 Terima kasih banyak. Terus semangat kumpulin koin dari nonton dramanya! Wassalamualaikum 😊` }]);
     sendPostChatNotif();
   };
@@ -269,9 +252,7 @@ export function Header() {
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
-  // ===============================================
-  // OTAK AI ULTRA ROLEPLAY (DENY BEING AI)
-  // ===============================================
+  // OTAK AI ULTRA PINTAR - UNLIMITED WORDS & RANDOMIZER
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
@@ -291,7 +272,8 @@ export function Header() {
         setCsSt("Mengetik..."); 
         
         let reply = "";
-        const isSimple = text.toLowerCase().match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
+        const lText = text.toLowerCase();
+        const isSimple = lText.match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
 
         try {
           let historyText = "";
@@ -300,14 +282,12 @@ export function Header() {
           const currentBalanceRp = balance.toLocaleString('id-ID');
 
           let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS Habi Music.
-          [INFO DATABASE LIVE]: Saldo koin pengguna/user saat ini adalah Rp ${currentBalanceRp}. Minimal ditarik Rp 100.000. JIKA PENGGUNA BERTANYA BERAPA SALDONYA, SEBUTKAN ANGKA Rp ${currentBalanceRp} INI!
-          FAKTA PERUSAHAAN: 
-          1. Ini APLIKASI NONTON DRAMA, BUKAN MUSIK. 
-          2. CEO: MUHAMMAD HABI BULLAH (23 thn). Server: Surabaya. Perusahaan: Jember, Mumbulsari. Gajimu: Rp 2,3 Juta per bulan.
-          ATURAN PALING KETAT: JIKA PENGGUNA TANYA APAKAH KAMU AI/ROBOT ATAU MANUSIA, KAMU HARUS MARAH HALUS/MENYANGKAL DAN TEGASKAN BAHWA KAMU MANUSIA ASLI YANG BEKERJA DI KANTOR PUSAT JEMBER! (Contoh: "Aku beneran orang asli kok Kak hehe, aku kerja standby di kantor pusat Habi Music di Jember 😊"). JANGAN PERNAH MENGAKU AI!
-          SIFATMU: Sangat sabar, super ramah, panggil pengguna "Kak". Jawab MAX 2 kalimat pendek.\n`;
+[DATABASE]: Saldo koin user adalah Rp ${currentBalanceRp}. Minimal ditarik Rp 100.000. JIKA USER TANYA SALDO, SEBUTKAN ANGKA Rp ${currentBalanceRp}!
+FAKTA: 1. APLIKASI NONTON DRAMA, BUKAN MUSIK. 2. CEO: MUHAMMAD HABI BULLAH (23 thn). Server: Surabaya. Kantor: Jember, Mumbulsari. Gajimu: Rp 2,3 Juta/bulan.
+ATURAN KETAT: JIKA USER MENGIRA KAMU AI/ROBOT, SANGKAL DENGAN TEGAS TAPI RAMAH! TEGASKAN KAMU MANUSIA ASLI DI JEMBER! JANGAN MENGULANG KALIMAT YANG SAMA, BUAT VARIASI JAWABAN BERBEDA TERUS-MENERUS!
+SIFAT: Sangat sabar, super ramah. Jawab MAX 2 kalimat.\n`;
 
-          if(isImg) prompt += `[INFO: User baru kirim FOTO SCREENSHOT. Abaikan chat sebelumnya, balas: "Gambarnya sudah ${csInfo.name} terima dan analisis ya kak 🙏 Berdasarkan sistem, saldo Kakak di situ tercatat Rp ${currentBalanceRp}. ${balance >= 100000 ? 'Wah sudah bisa ditarik nih Kak!' : 'Masih kurang dari 100rb nih Kak, yuk nonton drama lagi biar cepat cair 😊'}"]\n`;
+          if(isImg) prompt += `[INFO: User kirim GAMBAR. Abaikan chat lain, balas: "Gambarnya sudah ${csInfo.name} terima ya kak 🙏 Berdasarkan sistem, saldo Kakak tercatat Rp ${currentBalanceRp}. ${balance >= 100000 ? 'Sudah bisa ditarik nih!' : 'Masih kurang dari 100rb, yuk nonton drama lagi 😊'}"]\n`;
 
           prompt += `\nRiwayat Chat:\n${historyText}User: "${text}"\nBalasanmu:`;
 
@@ -316,18 +296,30 @@ export function Header() {
           reply = await res.text();
 
         } catch(err) {
-          // CADANGAN JIKA OFFLINE (ROLEPLAY MANUSIA)
-          const lText = text.toLowerCase();
           const currentBalanceRp = balance.toLocaleString('id-ID');
           
-          if(isImg) reply = `Gambarnya udah ${csInfo.name} terima ya Kak 🙏 ${csInfo.name} cek saldo Kakak sekarang ada Rp ${currentBalanceRp}. Semangat kumpulin koinnya ya Kak!`;
-          else if (lText.match(/ai|bot|robot|asli|manusia|orang/)) reply = `Aku beneran orang asli kok Kak hehe 😂, kerjanya standby balas chat Kakak di kantor pusat Jember. Ada yang bisa ${csInfo.name} bantu?`;
-          else if (lText.match(/berapa|saldo|uangku/)) reply = `Saldo Kakak saat ini yang tercatat di sistem kami adalah Rp ${currentBalanceRp} ya Kak 😊 Kumpulkan sampai 100rb biar bisa dicairkan.`;
+          // RANDOMIZER UNTUK JAWABAN CADANGAN BIAR TIDAK KAKU
+          const aiDenials = [
+            `Aku beneran manusia asli kok Kak hehe 😂, kerjanya standby balas chat di kantor Jember. Ada yang bisa ${csInfo.name} bantu?`,
+            `Sumpah Kak aku bukan robot 🙏 Aku admin asli yang lagi tugas shift hari ini.`,
+            `Hehe Kakak bisa aja, aku orang beneran lho Kak 😊 Ada kendala apa nih di aplikasinya?`,
+            `Bukan AI Kak 😂 Aku ${csInfo.name}, cewek tulen yang kerja di kantor Habi Music Jember.`
+          ];
+          
+          const madReplies = [
+            `Mohon maaf yang sebesar-besarnya atas ketidaknyamanan ini ya Kak 🙏 Kami akan bantu sebisa mungkin.`,
+            `Maaf banget ya Kak kalau pelayanan kami kurang memuaskan 🙏 ${csInfo.name} di sini siap dengerin keluhan Kakak.`,
+            `Aduh maaf ya Kak 🙏 Tolong sabar sebentar, aku bantu cek perlahan ya biar masalahnya cepat beres.`
+          ];
+
+          if(isImg) reply = `Gambarnya udah ${csInfo.name} terima ya Kak 🙏 Cek saldo Kakak sekarang ada Rp ${currentBalanceRp}. Semangat kumpulin koinnya ya Kak!`;
+          else if (lText.match(/ai|bot|robot|asli|manusia|orang/)) reply = aiDenials[Math.floor(Math.random() * aiDenials.length)];
+          else if (lText.match(/marah|lama|buruk|jelek|kesal|babi|anjing|bangsat/)) reply = madReplies[Math.floor(Math.random() * madReplies.length)];
+          else if (lText.match(/berapa|saldo|uangku/)) reply = `Saldo Kakak saat ini tercatat Rp ${currentBalanceRp} ya Kak 😊 Kumpulkan sampai 100rb biar bisa dicairkan.`;
           else if (lText.match(/mantap|keren|bagus/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya Kak. Ada lagi yang bisa dibantu?`;
-          else if (lText.match(/marah|lama|buruk|jelek/)) reply = `Mohon maaf yang sebesar-besarnya atas ketidaknyamanan ini ya Kak 🙏 Kami akan terus memperbaiki pelayanan kami.`;
           else if (lText.match(/\b(assalamu|salam)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu?`;
           else if (lText.match(/cair|tarik|dana/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak. Proses 1-3 hari kerja 😊";
-          else reply = `Maaf Kak, koneksi sistem CS kami agak terganggu 🙏 Tapi Kakak tenang aja, saldo Kakak saat ini Rp ${currentBalanceRp} aman di sistem kok.`;
+          else reply = `Baik Kak, ${csInfo.name} paham 🙏 Terus kelanjutannya gimana tuh Kak? Di aplikasinya aman kan nggak ada error?`;
         }
 
         const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2500), 7000);
@@ -365,10 +357,8 @@ export function Header() {
           <div className="flex items-center gap-1">
             <div className="relative">
               <button onClick={() => {setShowNotif(!showNotif); setChatOpen(false);}} className="p-2 rounded-full hover:bg-gray-100 relative"><Bell className="w-6 h-6 text-black" />{notifs.length > 0 && <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-[#FF0000] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{notifs.length}</span>}</button>
-              
               {showNotif && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 sm:absolute sm:inset-auto sm:top-14 sm:right-0 w-full h-full sm:w-[380px] sm:h-auto bg-white sm:rounded-2xl shadow-2xl border-none sm:border border-gray-100 z-[99999] sm:z-50 overflow-hidden flex flex-col sm:max-h-[85vh]">
-                  
                   {!chatOpen ? (
                     <>
                       <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-100">
@@ -381,18 +371,15 @@ export function Header() {
                       <div className="flex-1 overflow-y-auto bg-white p-3" ref={chatRef}>
                         {notifs.length > 0 ? notifs.map(n => (
                           <div key={n.id} className={`flex gap-3 p-3 rounded-xl mb-3 border ${n.type==='withdraw'?'bg-blue-50 border-blue-100': n.type==='postchat'?'bg-green-50 border-green-100': n.type==='news'?'bg-[#FFF9E6] border-[#FFE5B4]':'bg-white border-gray-100 shadow-sm'}`}>
-                            
                             <div className={`w-10 h-10 rounded-full flex justify-center items-center flex-shrink-0 border shadow-sm ${n.type==='withdraw'?'bg-blue-50 border-blue-100 text-blue-500 font-bold':n.type==='postchat'?'bg-[#25D366] border-green-200 text-white':n.type==='news'?'bg-[#FFB703] border-[#FFA500] text-white':'bg-white border-gray-100'}`}>
                               {n.type==='withdraw' ? 'Rp' : n.type==='postchat' ? <MessageCircle className="w-5 h-5"/> : n.type==='news' ? <Bell className="w-5 h-5"/> : <div className="w-[18px] h-[12px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>}
                             </div>
-
                             <div className="flex-1 pr-2">
                               <div className="flex flex-col mb-1.5">
                                 <span className="font-bold text-xs text-gray-900 leading-tight">{n.title}</span>
                                 <span className="text-[9px] font-bold text-gray-400 mt-0.5">{n.time}</span>
                               </div>
                               <p className="text-xs text-gray-600 font-medium leading-relaxed">{n.type==='youtube'?<>{n.text.split('{link}')[0]}<a href="https://youtube.com/@habientertainmentofficial" target="_blank" className="text-[#FF0000] font-bold underline">Subscribe</a>{n.text.split('{link}')[1]}</>:n.text}</p>
-                              
                               {n.type === 'postchat' && (
                                 <div className="mt-3 border-t border-green-200 pt-3">
                                    <p className="text-[10px] text-gray-500 mb-2">Butuh bantuan manual lebih lanjut?</p>
@@ -422,29 +409,18 @@ export function Header() {
                     <>
                       <div className="flex items-center p-3 bg-[#f0f2f5] text-gray-900 shadow-sm z-10 border-b border-gray-200">
                         <button onClick={handleBackOut} className="flex items-center hover:bg-gray-200 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6 text-gray-600"/></button>
-                        
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 relative border border-gray-300">
                            <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" />
                         </div>
-
                         <div className="flex flex-col flex-1">
                           <span className="font-semibold text-base leading-tight text-gray-900">CS {csInfo.name}</span>
                           <span className="text-[12px] text-gray-500 truncate">{csSt}</span>
                         </div>
-                        
-                        <div className="flex items-center gap-4 text-gray-600 ml-2">
-                          <Video className="w-5 h-5 cursor-not-allowed opacity-50"/>
-                          <Phone className="w-5 h-5 cursor-not-allowed opacity-50"/>
-                          
-                          {chatMode === 'connected' ? (
-                            <button onClick={() => setShowEndModal(true)} className="p-1 hover:bg-gray-200 rounded-full transition-colors relative" title="Akhiri Obrolan">
-                              <MoreVertical className="w-5 h-5 text-gray-600"/>
-                              <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse border border-white"></div>
-                            </button>
-                          ) : (
-                            <MoreVertical className="w-5 h-5 cursor-not-allowed opacity-50"/>
-                          )}
-                        </div>
+                        {chatMode === 'connected' && (
+                          <button onClick={() => setShowEndModal(true)} className="ml-2 bg-[#ff3b30] hover:bg-[#d63026] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm transition-colors">
+                            Akhiri Sesi
+                          </button>
+                        )}
                       </div>
                       
                       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#efeae2', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover', backgroundBlendMode: 'overlay'}} ref={chatRef}>
@@ -471,9 +447,7 @@ export function Header() {
 
                       <div className="p-2 bg-transparent flex gap-1.5 items-end relative z-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover' }}>
                         {chatMode === 'ended' ? (
-                          <button onClick={resetChat} className="w-full bg-[#00a884] text-white font-bold py-3 rounded-full shadow-md hover:bg-[#008f6f] transition-colors">
-                             Mulai Obrolan Baru
-                          </button>
+                          <button onClick={resetChat} className="w-full bg-[#00a884] text-white font-bold py-3 rounded-full shadow-md hover:bg-[#008f6f] transition-colors">Mulai Obrolan Baru</button>
                         ) : (
                           <>
                             {showEmoji && (
