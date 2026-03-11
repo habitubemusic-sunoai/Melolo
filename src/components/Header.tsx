@@ -22,30 +22,30 @@ export function Header() {
   const debouncedQuery = useDebounce(searchQuery, 300);
   const normalizedQuery = debouncedQuery.trim();
 
-  // State Animasi Waktu
+  // State Animasi 20 Detik (Logo & Lokasi)
   const [showLogo, setShowLogo] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
   const [userCity, setUserCity] = useState("Mendeteksi...");
 
-  // State Fitur Uang & Ledakan
+  // State Fitur Uang (15s teks + 5s meledak = 20s)
   const [showPromo, setShowPromo] = useState(true);
   const [isExploding, setIsExploding] = useState(false);
   const promoTexts = ["Bonus", "Dapat Uang", "Nonton Dibayar", "Klaim Cuan"];
   const [textIndex, setTextIndex] = useState(0);
   const [fadeText, setFadeText] = useState(true);
 
-  // State Notifikasi
+  // State Notifikasi (2 Jenis)
   const [showNotif, setShowNotif] = useState(false);
-  const [notifs, setNotifs] = useState<{id: number, time: string, text: string}[]>([]);
+  const [notifs, setNotifs] = useState<any[]>([]);
 
   useEffect(() => {
-    // --- 1. Timer Logo Transisi ke Jam (10 Detik) ---
-    const logoTimer = setTimeout(() => setShowLogo(false), 10000);
+    // --- 1. Timer Logo -> Jam (20 Detik) ---
+    const logoTimer = setTimeout(() => setShowLogo(false), 20000);
 
-    // --- 2. Timer Fitur Uang Meledak (15 Detik) ---
+    // --- 2. Timer Fitur Uang (15s Teks + 5s Ledakan Uang) ---
     const explodeTimer = setTimeout(() => {
-      setIsExploding(true); // Mulai animasi ledakan
-      setTimeout(() => setShowPromo(false), 800); // Hilang total setelah animasi selesai
+      setIsExploding(true); // Mulai meledak di detik 15
+      setTimeout(() => setShowPromo(false), 5000); // Hilang total di detik 20
     }, 15000);
 
     // --- 3. Rotasi Teks Fitur Uang ---
@@ -57,13 +57,32 @@ export function Header() {
       }, 500); 
     }, 3000);
 
-    // --- 4. Deteksi Kota ---
-    fetch('https://get.geojs.io/v1/ip/geo.json')
-      .then(res => res.json())
-      .then(data => setUserCity(data.city || "Indonesia"))
-      .catch(() => setUserCity("Indonesia"));
+    // --- 4. Pelacak Lokasi (Prioritas: GPS -> IP Internet) ---
+    const fetchLocationByIP = () => {
+      fetch('https://get.geojs.io/v1/ip/geo.json')
+        .then(res => res.json())
+        .then(data => setUserCity(data.city || "Indonesia"))
+        .catch(() => setUserCity("Indonesia"));
+    };
 
-    // --- 5. Update Jam Real-time ---
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+            .then(res => res.json())
+            .then(data => {
+              const city = data.address.city || data.address.town || data.address.county || "Indonesia";
+              setUserCity(city);
+            }).catch(fetchLocationByIP);
+        },
+        () => fetchLocationByIP(), // Jika ditolak user, pakai IP
+        { timeout: 5000 }
+      );
+    } else {
+      fetchLocationByIP();
+    }
+
+    // --- 5. Jam Real-time ---
     const clockInterval = setInterval(() => {
       const now = new Date();
       const dateString = now.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
@@ -73,36 +92,53 @@ export function Header() {
       setCurrentTime(`${dateString} | ${timeString} ${tzAbbr}`);
     }, 1000);
 
-    // --- 6. Sistem Notifikasi Harian Permanen ---
-    const now = new Date();
-    const todayDate = now.toLocaleDateString('id-ID'); 
-    const deletedDate = localStorage.getItem('habi_notif_deleted');
+    // --- 6. SISTEM NOTIFIKASI PINTAR ---
+    const buildNotifs = () => {
+      const now = new Date();
+      const activeNotifs = [];
 
-    // Jika pesan belum dihapus HARI INI
-    if (deletedDate !== todayDate) {
-      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-      const dayName = days[now.getDay()];
-      const fullDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      // A. Notifikasi 1: Subscribe YouTube (Aturan: Hilang 3 Jam jika dihapus)
+      const ytDeletedTime = localStorage.getItem('habi_yt_deleted_time');
+      let showYtNotif = true;
+      if (ytDeletedTime) {
+        const hoursDiff = (now.getTime() - parseInt(ytDeletedTime)) / (1000 * 60 * 60);
+        if (hoursDiff < 3) showYtNotif = false;
+      }
 
-      // Daftar kata-kata yang berganti setiap hari
-      const words = [
-        "Selamat datang kembali di Habi Music Official! 🎉 Nikmati koleksi drama terbaru kami hari ini.",
-        "Halo dari Habi Music Official! Semoga harimu menyenangkan. Jangan lupa klaim bonus harianmu ya!",
-        "Habi Music Official menyapamu! Ada banyak update drama seru yang siap menemani waktu luangmu.",
-        "Terima kasih sudah setia bersama Habi Music Official. Tonton terus dan nikmati kejutannya!",
-        "Selamat beraktivitas! Sempatkan nonton drama favoritmu hari ini eksklusif di Habi Music Official.",
-        "Akhir pekan makin seru bareng Habi Music Official! Yuk maraton drama sampai puas.",
-        "Hai! Ada episode baru yang menunggu untuk ditonton hari ini di Habi Music Official."
-      ];
-      const randomWord = words[now.getDay() % words.length];
+      if (showYtNotif) {
+        const ytTexts = [
+          "Bantu channel ini berkembang ya! Yuk {link} channel Habi Music sekarang.",
+          "Dukung karya kami dengan cara {link} channel resmi kami di YouTube.",
+          "Suka aplikasinya? Jangan lupa {link} ke channel kami untuk update seru lainnya!",
+          "Terima kasih atas dukunganmu. Silakan {link} channel Habi Entertainment Official."
+        ];
+        const randomYtText = ytTexts[now.getHours() % ytTexts.length]; // Berubah tiap jam
+        activeNotifs.push({ id: 'yt', type: 'youtube', time: 'Baru saja', text: randomYtText });
+      }
 
-      setNotifs([{
-        id: 1,
-        time: `${dayName}, ${fullDate} | ${timeStr} WIB`,
-        text: randomWord
-      }]);
-    }
+      // B. Notifikasi 2: Info Aplikasi/Uang (Aturan: Hilang seharian jika dihapus)
+      const appDeletedDate = localStorage.getItem('habi_app_deleted_date');
+      const todayStr = now.toLocaleDateString('id-ID');
+      
+      if (appDeletedDate !== todayStr) {
+        const appTexts = [
+          "Info: Event nonton dapat uang sedang berlangsung. Kumpulkan cuannya sekarang!",
+          "Update terbaru: Katalog Melolo dan DramaBox sudah dioptimalkan untukmu.",
+          "Selamat datang kembali! Ada banyak drama baru dengan resolusi tinggi menunggumu.",
+          "Pemberitahuan: Sistem pencarian semakin cepat, ketik judul favoritmu langsung muncul!",
+          "Kejutan harian: Nikmati maraton drama pendek tanpa gangguan iklan pop-up."
+        ];
+        const randomAppText = appTexts[now.getDay() % appTexts.length];
+        const fullDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        
+        activeNotifs.push({ id: 'app', type: 'app', time: `${fullDate} | ${timeStr} WIB`, text: randomAppText });
+      }
+
+      setNotifs(activeNotifs);
+    };
+
+    buildNotifs();
 
     return () => {
       clearTimeout(logoTimer);
@@ -112,16 +148,15 @@ export function Header() {
     };
   }, []);
 
-  const handleSearchClose = () => {
-    setSearchOpen(false);
-    setSearchQuery("");
-  };
-
-  // Fungsi Hapus Notifikasi (Hilang Permanen Hari Ini)
-  const deleteNotif = (id: number) => {
-    const today = new Date().toLocaleDateString('id-ID');
-    localStorage.setItem('habi_notif_deleted', today);
-    setNotifs([]);
+  // Fungsi Hapus Notifikasi (Beda Logika)
+  const deleteNotif = (id: string) => {
+    const now = new Date();
+    if (id === 'yt') {
+      localStorage.setItem('habi_yt_deleted_time', now.getTime().toString());
+    } else if (id === 'app') {
+      localStorage.setItem('habi_app_deleted_date', now.toLocaleDateString('id-ID'));
+    }
+    setNotifs(notifs.filter(n => n.id !== id));
   };
 
   const { isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFlickReels, isFreeReels, platformInfo } = usePlatform();
@@ -136,6 +171,11 @@ export function Header() {
   const isSearching = isDramaBox ? isSearchingDramaBox : isReelShort ? isSearchingReelShort : isShortMax ? isSearchingShortMax : isNetShort ? isSearchingNetShort : isMelolo ? isSearchingMelolo : isFlickReels ? isSearchingFlickReels : isSearchingFreeReels;
   const searchResults = isDramaBox ? dramaBoxResults : isReelShort ? reelShortResults?.data : isShortMax ? shortMaxResults?.data : isNetShort ? netShortResults?.data : isMelolo ? meloloResults?.data?.search_data?.flatMap((item: any) => item.books || []).filter((book: any) => book.thumb_url && book.thumb_url !== "") || [] : isFlickReels ? flickReelsResults?.data : freeReelsResults;
 
+  const handleSearchClose = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
   if (pathname?.startsWith("/watch")) return null;
 
   return (
@@ -144,24 +184,33 @@ export function Header() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             
-            {/* LOGO LINK MENUJU APLIKASI YOUTUBE */}
-            <a 
-              href="https://www.youtube.com/@habientertainmentofficial" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="relative flex-1 h-10 flex items-center overflow-hidden group"
-            >
-              {/* === LOGO YOUTUBE STYLE (10 Detik Pertama) === */}
-              <div className={`absolute left-0 transition-all duration-700 ease-in-out flex items-center gap-1 ${showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6 pointer-events-none'}`}>
-                {/* Ikon YouTube Merah */}
+            <a href="https://www.youtube.com/@habientertainmentofficial" target="_blank" rel="noopener noreferrer" className="relative flex-1 h-10 flex items-center overflow-hidden group">
+              
+              {/* === LOGO YOUTUBE STYLE (20 Detik Pertama) === */}
+              <div className={`absolute left-0 transition-all duration-700 ease-in-out flex items-center gap-1 overflow-hidden px-1 py-1 ${showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6 pointer-events-none'}`}>
+                
+                {/* Cahaya Kilau di atas tulisan */}
+                {showLogo && (
+                  <style dangerouslySetInnerHTML={{__html: `
+                    .cahaya-kilau {
+                      position: absolute; top: 0; left: -150%; width: 150%; height: 100%;
+                      background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
+                      transform: skewX(-25deg); animation: kilauAnimasi 1.8s ease-in-out 0.2s forwards;
+                      z-index: 20; pointer-events: none;
+                    }
+                    @keyframes kilauAnimasi { 0% { left: -150%; } 100% { left: 150%; } }
+                  `}} />
+                )}
+                <div className="cahaya-kilau"></div>
+
                 <div className="w-[30px] h-[20px] rounded-[5px] bg-[#FF0000] flex items-center justify-center relative z-10">
                   <Play className="w-3 h-3 text-white fill-white ml-0.5" />
                 </div>
-                {/* Teks Habi Music */}
                 <span className="font-sans font-bold text-[20px] tracking-tighter text-black relative z-10 mt-[1px]">
                   Habi Music
                 </span>
-                {/* Suara Sihir Kilauan */}
+
+                {/* Suara Sihir (Volume Max by browser default) */}
                 {showLogo && (
                   <audio autoPlay preload="auto">
                     <source src="https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg" type="audio/ogg" />
@@ -169,7 +218,7 @@ export function Header() {
                 )}
               </div>
 
-              {/* === TEKS JAM & KOTA (Setelah 10 Detik) === */}
+              {/* === TEKS JAM & KOTA GPS (Setelah 20 Detik) === */}
               <div className={`absolute left-0 transition-all duration-700 ease-in-out flex flex-col justify-center ${!showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'}`}>
                 <div className="flex items-center gap-1 text-gray-800 font-bold text-[11px] sm:text-xs tracking-tight">
                   <MapPin className="w-3.5 h-3.5 text-[#FF0000]" />
@@ -181,10 +230,8 @@ export function Header() {
               </div>
             </a>
 
-            {/* KANAN: Ikon Lonceng Notif & Search */}
+            {/* KANAN: Ikon Lonceng & Search */}
             <div className="flex items-center gap-1">
-              
-              {/* Lonceng Notifikasi */}
               <div className="relative">
                 <button onClick={() => setShowNotif(!showNotif)} className="p-2 rounded-full hover:bg-gray-100 transition-colors relative">
                   <Bell className="w-[22px] h-[22px] text-black" />
@@ -195,37 +242,49 @@ export function Header() {
                   )}
                 </button>
 
-                {/* Panel Dropdown Notifikasi */}
+                {/* Dropdown Notifikasi */}
                 {showNotif && (
-                  <div className="absolute top-12 right-0 w-[280px] sm:w-[320px] bg-white rounded-xl shadow-[0_5px_25px_rgba(0,0,0,0.15)] border border-gray-100 z-50 overflow-hidden">
+                  <div className="absolute top-12 right-0 w-[300px] sm:w-[340px] bg-white rounded-xl shadow-[0_5px_25px_rgba(0,0,0,0.15)] border border-gray-100 z-50 overflow-hidden">
                     <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50">
                       <h3 className="font-bold text-gray-800 text-sm">Notifikasi</h3>
-                      <button onClick={() => setShowNotif(false)} className="text-gray-500 hover:text-gray-800">
-                        <X className="w-4 h-4" />
-                      </button>
+                      <button onClick={() => setShowNotif(false)} className="text-gray-500 hover:text-gray-800"><X className="w-4 h-4" /></button>
                     </div>
                     <div className="p-2 max-h-[60vh] overflow-y-auto">
                       {notifs.length > 0 ? (
                         notifs.map((notif) => (
-                          <div key={notif.id} className="flex gap-3 p-3 hover:bg-gray-50 rounded-lg group relative">
-                            {/* Logo YouTube Style di Notif */}
+                          <div key={notif.id} className="flex gap-3 p-3 hover:bg-gray-50 rounded-lg group relative border-b border-gray-50 last:border-0">
+                            {/* Ikon Logo */}
                             <div className="w-8 h-8 rounded-md bg-[#FF0000] flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
                               <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                             </div>
                             <div className="flex-1 pr-6">
                               <p className="text-[10px] text-gray-400 font-medium mb-1">{notif.time}</p>
-                              <p className="text-xs text-gray-800 leading-relaxed font-medium">{notif.text}</p>
+                              
+                              {/* Logika Teks Subscribe Warna Merah Bisa Diklik */}
+                              <p className="text-xs text-gray-800 leading-relaxed font-medium">
+                                {notif.type === 'youtube' ? (
+                                  <>
+                                    {notif.text.split('{link}')[0]}
+                                    <a href="https://www.youtube.com/@habientertainmentofficial" target="_blank" rel="noopener noreferrer" className="text-[#FF0000] font-bold hover:underline">
+                                      Subscribe
+                                    </a>
+                                    {notif.text.split('{link}')[1]}
+                                  </>
+                                ) : (
+                                  notif.text
+                                )}
+                              </p>
+
                             </div>
-                            {/* Tombol Hapus */}
                             <button onClick={() => deleteNotif(notif.id)} className="absolute top-3 right-3 text-gray-300 hover:text-[#FF0000] transition-colors">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         ))
                       ) : (
-                        <div className="py-6 flex flex-col items-center justify-center text-gray-400">
+                        <div className="py-8 flex flex-col items-center justify-center text-gray-400">
                            <Bell className="w-8 h-8 mb-2 opacity-20" />
-                           <span className="text-sm">Tidak ada notifikasi hari ini.</span>
+                           <span className="text-sm">Tidak ada notifikasi baru.</span>
                         </div>
                       )}
                     </div>
@@ -233,87 +292,54 @@ export function Header() {
                 )}
               </div>
 
-              {/* Tombol Search */}
               <button onClick={() => setSearchOpen(true)} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                 <Search className="w-[22px] h-[22px] text-black" />
               </button>
             </div>
-
           </div>
         </div>
-
-        {/* Portal Search */}
-        {searchOpen && typeof document !== "undefined" && createPortal(
-            <div className="fixed inset-0 bg-white z-[9999] overflow-hidden">
-              <div className="container mx-auto px-4 py-6 h-[100dvh] flex flex-col">
-                <div className="flex items-center gap-4 mb-6 flex-shrink-0">
-                  <div className="flex-1 relative min-w-0">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={`Cari drama di ${platformInfo.name}...`} className="search-input pl-12 bg-gray-50 border border-gray-200 text-gray-900 rounded-2xl w-full py-3" autoFocus />
-                  </div>
-                  <button onClick={handleSearchClose} className="p-3 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0">
-                    <X className="w-5 h-5 text-gray-700" />
-                  </button>
-                </div>
-                <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-                  <span>Mencari di:</span>
-                  <span className="px-2 py-1 rounded-full bg-red-50 text-[#FF0000] font-bold">{platformInfo.name}</span>
-                </div>
-                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-                  {isSearching && normalizedQuery && <div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" /></div>}
-                  {/* Results Map (Kompak agar tidak panjang) */}
-                  {isDramaBox && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((drama: any, i: number) => <Link key={drama.bookId} href={`/detail/dramabox/${drama.bookId}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><img src={drama.cover} alt={drama.bookName} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" loading="lazy" referrerPolicy="no-referrer" /><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{drama.bookName}</h3><p className="text-sm text-gray-500 line-clamp-2 mt-2">{drama.introduction}</p></div></Link>)}</div>}
-                  {isReelShort && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((book: any, i: number) => <Link key={book.book_id} href={`/detail/reelshort/${book.book_id}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><img src={book.book_pic} alt={book.book_title} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" loading="lazy" referrerPolicy="no-referrer" /><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{book.book_title}</h3><p className="text-sm text-gray-500 line-clamp-2 mt-2">{book.special_desc}</p></div></Link>)}</div>}
-                   {isNetShort && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((drama: any, i: number) => <Link key={drama.shortPlayId} href={`/detail/netshort/${drama.shortPlayId}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><img src={drama.cover} alt={drama.title} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" loading="lazy" referrerPolicy="no-referrer" /><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{drama.title}</h3></div></Link>)}</div>}
-                   {isShortMax && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((drama: any, i: number) => <Link key={`${drama.shortPlayId}-${i}`} href={`/detail/shortmax/${drama.shortPlayId}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><img src={drama.cover} alt={drama.title} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" loading="lazy" referrerPolicy="no-referrer" /><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{drama.title}</h3></div></Link>)}</div>}
-                  {isMelolo && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((book: any, i: number) => <Link key={book.book_id} href={`/detail/melolo/${book.book_id}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><div className="w-16 h-24 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden">{book.thumb_url ? <img src={book.thumb_url.includes(".heic") ? `https://wsrv.nl/?url=${encodeURIComponent(book.thumb_url)}&output=jpg` : book.thumb_url} alt={book.book_name} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" /> : <div className="w-full h-full flex items-center justify-center bg-gray-100"><span className="text-xs text-gray-400">No Img</span></div>}</div><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{book.book_name}</h3></div></Link>)}</div>}
-                  {isFlickReels && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((book: any, i: number) => <Link key={book.playlet_id} href={`/detail/flickreels/${book.playlet_id}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><img src={book.cover} alt={book.title} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" loading="lazy" referrerPolicy="no-referrer" /><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{book.title}</h3></div></Link>)}</div>}
-                  {isFreeReels && searchResults && searchResults.length > 0 && <div className="grid gap-3">{searchResults.map((book: any, i: number) => <Link key={book.key || i} href={`/detail/freereels/${book.key}`} onClick={handleSearchClose} className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-50 border border-gray-100 shadow-sm transition-all text-left animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}><img src={book.coverUrl || book.cover || ""} alt={book.title} className="w-16 h-24 object-cover rounded-xl flex-shrink-0" loading="lazy" referrerPolicy="no-referrer" /><div className="flex-1 min-w-0"><h3 className="font-bold text-gray-900 truncate">{book.title}</h3></div></Link>)}</div>}
-                </div>
-              </div>
-            </div>,
-            document.body
-          )}
       </header>
 
-      {/* === ANIMASI CSS UNTUK PECAH & UANG JATUH === */}
+      {/* === ANIMASI EFEK PECAH & UANG RUPIAH === */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes shatterOut {
-          0% { transform: scale(1); opacity: 1; filter: brightness(1); }
-          20% { transform: scale(1.3) rotate(-15deg); opacity: 1; filter: brightness(1.5); }
-          100% { transform: scale(0) rotate(45deg); opacity: 0; filter: brightness(0); }
+        @keyframes explodeOut {
+          0% { transform: scale(1); opacity: 1; }
+          40% { transform: scale(1.4) rotate(10deg); opacity: 1; filter: brightness(1.2); }
+          100% { transform: scale(0); opacity: 0; }
         }
-        @keyframes rainMoney {
-          0% { transform: translate(0px, 0px) scale(1) rotate(0deg); opacity: 1; }
-          100% { transform: translate(var(--tx), 80px) scale(0.5) rotate(var(--rot)); opacity: 0; }
+        @keyframes rainCash {
+          0% { transform: translate(0px, 0px) scale(0.5) rotate(0deg); opacity: 1; }
+          100% { transform: translate(var(--tx), 100px) scale(1) rotate(var(--rot)); opacity: 0; }
         }
-        .explode-effect { animation: shatterOut 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-        .money-particle {
-          position: absolute; top: 50%; left: 50%;
-          font-size: 20px; pointer-events: none;
-          animation: rainMoney 0.8s ease-out forwards;
+        .explode-animation { animation: explodeOut 0.5s ease-in forwards; }
+        .rupiah-particle {
+          position: absolute; top: 30%; left: 30%;
+          font-weight: 900; pointer-events: none;
+          text-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+          animation: rainCash 1.5s ease-out forwards;
         }
       `}} />
 
-      {/* === WIDGET FITUR UANG (Turun ke area 54 Ep) === */}
+      {/* === WIDGET UANG (Posisi pas di atas "54 Ep" Thumbnail Pertama) === */}
+      {/* top-[240px] dan left-4 disesuaikan posisinya di atas thumbnail */}
       {showPromo && typeof document !== "undefined" && createPortal(
-        <div className="fixed top-[320px] left-6 z-[40]">
+        <div className="fixed top-[240px] left-4 z-[40]">
           <div className="relative group flex flex-col items-center">
             
-            {/* Animasi Ledakan & Kado */}
-            <div className={`relative ${isExploding ? 'explode-effect' : ''}`}>
+            <div className={`relative ${isExploding ? 'explode-animation' : ''}`}>
               
-              {/* Partikel Uang yang akan berhamburan saat meledak */}
+              {/* Partikel Uang saat meledak (Detik 15 - 20) */}
               {isExploding && (
                 <>
-                  <div className="money-particle" style={{'--tx': '-30px', '--rot': '-45deg', animationDelay: '0s'} as any}>💸</div>
-                  <div className="money-particle" style={{'--tx': '30px', '--rot': '45deg', animationDelay: '0.1s'} as any}>💰</div>
-                  <div className="money-particle" style={{'--tx': '0px', '--rot': '180deg', animationDelay: '0.2s'} as any}>🪙</div>
-                  <div className="money-particle" style={{'--tx': '-15px', '--rot': '-90deg', animationDelay: '0.15s'} as any}>💸</div>
+                  <div className="rupiah-particle text-green-600 text-[14px]" style={{'--tx': '-40px', '--rot': '-45deg', animationDelay: '0s'} as any}>Rp 50K</div>
+                  <div className="rupiah-particle text-yellow-500 text-[16px]" style={{'--tx': '50px', '--rot': '30deg', animationDelay: '0.1s'} as any}>Rp 100K</div>
+                  <div className="rupiah-particle text-green-500 text-[20px]" style={{'--tx': '0px', '--rot': '180deg', animationDelay: '0.2s'} as any}>💸</div>
+                  <div className="rupiah-particle text-yellow-600 text-[18px]" style={{'--tx': '-20px', '--rot': '-90deg', animationDelay: '0.3s'} as any}>🪙</div>
+                  <div className="rupiah-particle text-red-500 text-[14px]" style={{'--tx': '30px', '--rot': '60deg', animationDelay: '0.15s'} as any}>Rp 200K</div>
                 </>
               )}
 
-              {/* Ikon Kado & Teks Tanpa Background */}
+              {/* Ikon Kado & Teks (Detik 0 - 15) */}
               {!isExploding && (
                 <a 
                   href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20mau%20info%20Aplikasi%20Drama%20Penghasil%20Uang!" 
@@ -321,12 +347,9 @@ export function Header() {
                   rel="noopener noreferrer"
                   className="flex flex-col items-center justify-center transition-transform hover:scale-110"
                 >
-                  {/* Emoji Kado dengan bayangan tebal */}
-                  <span className="text-[26px] drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">🎁</span>
-                  
-                  {/* Teks Animasi Berganti */}
+                  <span className="text-[26px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">🎁</span>
                   <div className={`transition-opacity duration-500 flex flex-col items-center text-center mt-0.5 ${fadeText ? 'opacity-100' : 'opacity-0'}`}>
-                    <span className="text-[10px] font-extrabold text-[#FF0000] drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] bg-white/80 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                    <span className="text-[9px] font-extrabold text-[#FF0000] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)] bg-white/70 px-1 rounded backdrop-blur-sm">
                       {promoTexts[textIndex]}
                     </span>
                   </div>
@@ -340,4 +363,4 @@ export function Header() {
       )}
     </>
   );
-}
+                                                         }
