@@ -35,7 +35,7 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  // Data Nama CS
+  // Data CS
   const csNames = ["Siti", "Ayu", "Nisa", "Rini", "Putri", "Zahra"];
   const [csInfo, setCsInfo] = useState({ name: "CS" });
   const [csSt, setCsSt] = useState("Online");
@@ -46,6 +46,7 @@ export function Header() {
   const [chatInput, setChatInput] = useState("");
   const [chats, setChats] = useState([]);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false); // Modal Akhiri Chat
   const chatRef = useRef(null);
   const fileInputRef = useRef(null);
   const idleChatTimeout = useRef(null);
@@ -62,6 +63,12 @@ export function Header() {
   const mlRes = useMeloloSearch(isMelolo ? nQuery : "");
   const frRes = useFlickReelsSearch(isFlickReels ? nQuery : "");
   const freRes = useFreeReelsSearch(isFreeReels ? nQuery : "");
+
+  const getFullDate = () => {
+    const dt = new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    const tm = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+    return `${dt} | ${tm}`;
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -83,22 +90,17 @@ export function Header() {
         () => fetch('https://get.geojs.io/v1/ip/geo.json').then(r=>r.json()).then(d=>setUserCity(d.city||"Indonesia")).catch(()=>setUserCity("Indonesia")), { timeout: 10000, enableHighAccuracy: true }
       );
     }
-    const cInt = setInterval(() => {
-      const d = new Date();
-      setCurrentTime(d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) + ' | ' + d.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}));
-    }, 1000);
+    const cInt = setInterval(() => { setCurrentTime(getFullDate()); }, 1000);
 
     const aN = [];
-    const tS = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
     if(!localStorage.getItem('habi_yt_del')) {
-      aN.push({ id:'yt', type:'youtube', time:tS, title:'Admin Habi', text:'Dukung karya kami dengan {link} channel resmi kami.' });
+      aN.push({ id:'yt', type:'youtube', time: getFullDate(), title:'Admin Habi', text:'Dukung karya kami dengan {link} channel resmi kami.' });
     }
     setNotifs(aN);
 
     const handleWd = (e) => {
       const d = e.detail;
-      const tm = new Date(d.timestamp).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-      setNotifs(p => [{ id:'wd_'+d.id, type:'withdraw', time:tm, title:'Finance', text:`💳 PENDING: Rp100.000 ke ${d.method} (${d.account}) sedang diproses.` }, ...p]);
+      setNotifs(p => [{ id:'wd_'+d.id, type:'withdraw', time: getFullDate(), title:'Finance', text:`💳 PENDING: Rp100.000 ke ${d.method} (${d.account}) sedang diproses.` }, ...p]);
     };
     window.addEventListener('habi_withdraw_event', handleWd);
 
@@ -133,9 +135,7 @@ export function Header() {
 
   useEffect(() => { if(chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt, chatMode]);
 
-  // ===============================================
   // FUNGSI NOTIFIKASI PINTAR (POST-CHAT)
-  // ===============================================
   const sendPostChatNotif = () => {
     if(hasNotified.current) return;
     hasNotified.current = true;
@@ -144,13 +144,10 @@ export function Header() {
       `Terima kasih sudah menghubungi CS Habi Music Kak! 🙏 Jangan lupa lanjut nonton episode dramanya biar saldo cepat 100rb dan bisa dicairkan ya 😊`,
       `Sesi chat telah berakhir. Semangat terus kumpulin koinnya dari nonton drama ya Kak! Kalau ada kendala penarikan DANA, CS ${csInfo.name} selalu siap bantu 🙏`,
       `Halo Kak, obrolan bantuan tadi sudah ditutup ya. Ingat, Habi Music selalu siap bantu Kakak mencairkan uang tunai dari nonton drama. Sehat selalu! ✨`,
-      `Pesan dari CS ${csInfo.name}: Terima kasih Kak! Terus nikmati tontonan drama pendek kami dan raih cuannya. Kalau butuh bantuan lagi, kami selalu ada 🙏`,
-      `Sesi bantuan selesai. Jangan lupa fokus selesaikan episode dramanya ya Kak biar koinnya cepat masuk dan bisa ditarik ke rekening! 💸`
+      `Pesan dari CS ${csInfo.name}: Terima kasih Kak! Terus nikmati tontonan drama pendek kami dan raih cuannya. Kalau butuh bantuan lagi, kami selalu ada 🙏`
     ];
     const randMsg = endMsgs[Math.floor(Math.random() * endMsgs.length)];
-    const tS = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-    
-    setNotifs(p => [{ id: 'notif_'+Date.now(), type: 'app', time: tS, title: `Pesan CS ${csInfo.name}`, text: randMsg }, ...p]);
+    setNotifs(p => [{ id: 'notif_'+Date.now(), type: 'app', time: getFullDate(), title: `Pesan CS ${csInfo.name}`, text: randMsg }, ...p]);
   };
 
   // SISTEM AUTO-PAMIT (IDLE 3 MENIT)
@@ -160,8 +157,8 @@ export function Header() {
       idleChatTimeout.current = setTimeout(() => {
         setChatMode('ended');
         setCsSt("Offline");
-        setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Assalamualaikum Kak 🙏 Karena sudah 3 menit tidak ada respons, sesi chat ini ${csInfo.name} akhiri dulu ya. Jangan lupa lanjut nonton dramanya biar koin Habi Music-nya cepat ditarik! 😊` }]);
-        sendPostChatNotif(); // Kirim Notif
+        setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Assalamualaikum Kak 🙏 Karena sudah 3 menit tidak ada respons, obrolan ini ${csInfo.name} akhiri dulu ya. Jangan lupa lanjut nonton dramanya biar koinnya cepat ditarik! 😊` }]);
+        sendPostChatNotif(); 
       }, 180000); 
     }
     return () => clearTimeout(idleChatTimeout.current);
@@ -170,7 +167,7 @@ export function Header() {
   const openChatCS = () => {
     setChatOpen(true);
     if(chatMode === 'idle') {
-      hasNotified.current = false; // Reset notif status
+      hasNotified.current = false;
       const newName = csNames[Math.floor(Math.random() * csNames.length)];
       setCsInfo({ name: newName });
       setChatMode('queue'); setCsSt("Mencari CS...");
@@ -184,24 +181,18 @@ export function Header() {
     }
   };
 
-  // KELUAR DARI CHAT (PANAH KIRI)
   const handleBackOut = () => {
     setChatOpen(false);
-    if(chatMode === 'connected' || chatMode === 'ended') {
-      sendPostChatNotif();
-    }
+    if(chatMode === 'connected' || chatMode === 'ended') sendPostChatNotif();
   };
 
-  // TOMBOL LED MERAH (PAMIT MANUAL)
-  const manualEndChat = () => {
-    if(chatMode !== 'connected') return;
-    if(confirm("Akhiri sesi obrolan dengan CS?")) {
-      setChatMode('ended');
-      setCsSt("Offline");
-      clearTimeout(idleChatTimeout.current);
-      setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Baik Kak, obrolan ini ${csInfo.name} tutup ya 🙏 Terima kasih sudah setia menggunakan Habi Music. Terus semangat kumpulin koin dari nonton dramanya! Wassalamualaikum 😊` }]);
-      sendPostChatNotif(); // Kirim Notif
-    }
+  const confirmEndChat = () => {
+    setShowEndModal(false);
+    setChatMode('ended');
+    setCsSt("Offline");
+    clearTimeout(idleChatTimeout.current);
+    setChats(p => [...p, { id: Date.now().toString(), sender: 'admin', time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text: `Baik Kak, obrolan ini ${csInfo.name} tutup ya 🙏 Terima kasih banyak. Terus semangat kumpulin koin dari nonton dramanya! Wassalamualaikum 😊` }]);
+    sendPostChatNotif();
   };
 
   const resetChat = () => { setChats([]); setChatMode('idle'); setCsSt("Online"); openChatCS(); };
@@ -219,7 +210,7 @@ export function Header() {
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
-  // OTAK AI VERSI ULTRA MAX (MEMORI SUPER & PAHAM APLIKASI DRAMA)
+  // OTAK AI ULTRA CANGGIH (MEMORI SUPER & PAHAM APLIKASI)
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
@@ -246,26 +237,29 @@ export function Header() {
           let historyText = "";
           chats.slice(-6).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
 
-          let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS aplikasi "Habi Music". FAKTA PENTING TENTANG APLIKASI: Habi Music adalah APLIKASI NONTON DRAMA PENDEK berhadiah uang, BUKAN APLIKASI LAGU/MUSIK. Jika ditanya lagu, tegaskan ini aplikasi nonton drama berbayar. Pengguna mendapat uang setelah selesai nonton 1 episode. Penarikan minimal Rp 100.000 ke DANA/Gopay/ShopeePay. Sifatmu: Muslimah Jawa Timur, ramah, SANGAT SOPAN, pintar, dan asyik. Jawab MAKSIMAL 2 kalimat pendek. Pahami konteks obrolan sebelumnya.\n`;
+          let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS aplikasi "Habi Music". FAKTA PENTING APLIKASI: Habi Music adalah APLIKASI NONTON DRAMA PENDEK berhadiah uang, BUKAN APLIKASI LAGU/MUSIK. Pengguna mendapat koin uang setelah selesai nonton 1 episode. Penarikan minimal Rp 100.000 ke DANA/Gopay/ShopeePay. Sifatmu: Muslimah Jawa Timur, ramah, SANGAT SOPAN (menganggap pengguna sebagai raja/VIP), pintar, dan nyambung. Jawab MAKSIMAL 2 kalimat pendek. Pahami konteks obrolan.\n`;
 
-          if(isImg) prompt += `[INFO: User baru mengirim GAMBAR SCREENSHOT. Abaikan chat sebelumnya, langsung balas: "Gambarnya sudah ${csInfo.name} terima dan cek ya kak 🙏 Kalau saldo Kakak belum sampai 100rb, lanjut nonton dramanya dulu ya biar cepat cair 😊"]\n`;
+          if(isImg) prompt += `[INFO: User mengirim GAMBAR SCREENSHOT. Balas: "Gambarnya sudah ${csInfo.name} terima dan cek ya kak 🙏 Kalau saldonya belum sampai 100rb, lanjut nonton dramanya dulu ya biar cepat cair 😊"]\n`;
 
-          prompt += `\nRiwayat Obrolan Terakhir:\n${historyText}User: "${text}"\nBalasanmu:`;
+          prompt += `\nRiwayat Obrolan:\n${historyText}User: "${text}"\nBalasanmu:`;
 
           const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
           if (!res.ok) throw new Error("API failed");
           reply = await res.text();
 
         } catch(err) {
+          // LOGIKA CADANGAN SUPER PINTAR & SOPAN
           if(isImg) reply = `Baik Kak, gambarnya udah ${csInfo.name} terima ya. Kalau saldonya belum 100rb, semangat nonton dramanya terus ya Kak 🙏`;
+          else if (lText.match(/mantap|keren|bagus|hebat|wah|wih|wow|gokil/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya Kak nonton dramanya biar koinnya makin melimpah. Ada lagi yang bisa ${csInfo.name} bantu?`;
+          else if (lText.match(/scam|bohong|tipu|masa|palsu|beneran/)) reply = `Habi Music 100% amanah dan terbukti membayar Kak 😊 Kumpulkan saldonya sampai 100rb, nanti pasti bisa ditarik langsung ke rekening Kakak.`;
           else if (lText.match(/\b(assalamu|salam|samlekom)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu terkait aplikasinya?`;
-          else if (lText.match(/cair|tarik|uang|wd|dana/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak, prosesnya 1-3 hari kerja 😊";
-          else if (lText.match(/lagu|musik|music/)) reply = `Maaf Kak, walaupun namanya Habi Music, tapi ini sebenarnya aplikasi nonton drama lho Kak 😊 Nonton dramanya bisa dapat uang.`;
-          else if (lText.match(/kok|lama|belum|mana/)) reply = `Mohon maaf yang sebesar-besarnya ya Kak 🙏 Antrean penarikannya memang sedang sangat padat hari ini.`;
-          else if (lText.match(/gimana|cara/)) reply = "Kakak tinggal fokus nonton episode dramanya sampai habis aja, nanti koinnya bertambah otomatis kok.";
+          else if (lText.match(/cair|tarik|uang|wd|dana|gopay|saldo/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak. Proses pencairannya 1-3 hari kerja 😊";
+          else if (lText.match(/lagu|musik|music/)) reply = `Maaf Kak meluruskan, walaupun namanya Habi Music, tapi ini sebenarnya aplikasi nonton drama lho Kak 😊 Coba deh ditonton, bisa dapat uang.`;
+          else if (lText.match(/kok|lama|belum|mana/)) reply = `Mohon maaf yang sebesar-besarnya ya Kak 🙏 Antrean penarikannya memang sedang sangat padat hari ini. Mohon ketersediaannya untuk menunggu ya Kak.`;
+          else if (lText.match(/gimana|cara/)) reply = "Sangat mudah Kak. Kakak tinggal fokus nonton episode dramanya sampai habis aja, nanti koinnya bertambah otomatis kok.";
           else if (lText.match(/\b(halo|hai|p|ping)\b/)) reply = `Halo Kak! Aku ${csInfo.name}, ada kendala apa nih di aplikasinya?`;
-          else if (lText.match(/iya|oke|sip|baik|makasih/)) reply = `Sama-sama Kak! Senang bisa melayani Kakak. Kalau ada apa-apa jangan sungkan chat lagi ya 😊`;
-          else reply = `Oh begitu ya Kak 🙏 Terus kelanjutannya gimana tuh Kak? Di aplikasinya aman kan?`;
+          else if (lText.match(/iya|oke|sip|baik|makasih/)) reply = `Sama-sama Kak! Senang sekali bisa melayani Kakak. Kalau ada apa-apa jangan sungkan chat lagi ya 😊`;
+          else reply = `Oh begitu ya Kak 🙏 Terus kelanjutannya gimana tuh Kak? Di aplikasinya aman kan nggak ada kendala?`;
         }
 
         const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2500), 7000);
@@ -307,7 +301,7 @@ export function Header() {
             </div>
             <div className={`absolute left-0 w-full transition-all duration-700 flex flex-col justify-center ${!showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'}`}>
               <div className="flex items-center gap-1 text-gray-900 font-bold text-[10px] sm:text-xs"><MapPin className="w-3 h-3 text-[#FF0000] flex-shrink-0" /><span className="truncate max-w-[150px] sm:max-w-[250px]">{userCity}</span></div>
-              <div className="text-gray-500 font-mono text-[9px] sm:text-[10px] ml-4 tracking-tight">{currentTime}</div>
+              <div className="text-gray-500 font-mono text-[9px] sm:text-[10px] ml-4 tracking-tight">{currentTime.split(' | ')[1]}</div>
             </div>
           </Link>
 
@@ -330,9 +324,17 @@ export function Header() {
                       <div className="flex-1 overflow-y-auto bg-white p-3" ref={chatRef}>
                         {notifs.length > 0 ? notifs.map(n => (
                           <div key={n.id} className={`flex gap-3 p-3 rounded-xl mb-3 border ${n.type==='withdraw'?'bg-blue-50 border-blue-100':'bg-white border-gray-100 shadow-sm'}`}>
-                            <div className={`w-10 h-10 rounded-full flex justify-center items-center flex-shrink-0 text-white font-bold text-sm ${n.type==='withdraw'?'bg-blue-500':'bg-[#FF0000]'}`}>{n.type==='withdraw'?'Rp':'HM'}</div>
+                            
+                            {/* LOGO OFFICIAL DI DALAM NOTIFIKASI */}
+                            <div className={`w-10 h-10 rounded-full flex justify-center items-center flex-shrink-0 border shadow-sm ${n.type==='withdraw'?'bg-blue-50 border-blue-100':'bg-white border-gray-100'}`}>
+                              {n.type==='withdraw' ? <span className="text-blue-500 font-bold text-xs">Rp</span> : <div className="w-[18px] h-[12px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>}
+                            </div>
+
                             <div className="flex-1 pr-2">
-                              <div className="flex justify-between items-start mb-1"><span className="font-bold text-xs text-gray-900">{n.title}</span><span className="text-[10px] font-bold text-gray-400">{n.time}</span></div>
+                              <div className="flex flex-col mb-1.5">
+                                <span className="font-bold text-xs text-gray-900 leading-tight">{n.title}</span>
+                                <span className="text-[9px] font-bold text-gray-400 mt-0.5">{n.time}</span>
+                              </div>
                               <p className="text-xs text-gray-600 font-medium leading-relaxed">{n.type==='youtube'?<>{n.text.split('{link}')[0]}<a href="https://youtube.com/@habientertainmentofficial" target="_blank" className="text-[#FF0000] font-bold underline">Subscribe</a>{n.text.split('{link}')[1]}</>:n.text}</p>
                             </div>
                             <button onClick={()=>{if(n.id==='yt')localStorage.setItem('habi_yt_del',Date.now().toString());setNotifs(notifs.filter(x=>x.id!==n.id));}} className="text-gray-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button>
@@ -362,8 +364,8 @@ export function Header() {
                         </div>
                         
                         {chatMode === 'connected' && (
-                          <button onClick={manualEndChat} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors ml-2" title="Akhiri Obrolan">
-                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)] border border-red-300/50"></div>
+                          <button onClick={() => setShowEndModal(true)} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors ml-2" title="Akhiri Obrolan">
+                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)] border border-red-300/50 animate-pulse"></div>
                           </button>
                         )}
                       </div>
@@ -414,6 +416,21 @@ export function Header() {
                           </>
                         )}
                       </div>
+                      
+                      {/* POP-UP MODAL AKHIRI CHAT ALA TIKTOK */}
+                      {showEndModal && (
+                        <div className="fixed inset-0 z-[1000000] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center animate-in fade-in duration-200">
+                          <div className="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95">
+                            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 sm:hidden"></div>
+                            <h3 className="text-xl font-black text-gray-900 text-center mb-2">Akhiri Sesi Bantuan?</h3>
+                            <p className="text-sm text-gray-500 text-center font-medium mb-8 px-4">Sesi obrolan ini akan ditutup. Kakak yakin ingin mengakhirinya sekarang?</p>
+                            <div className="flex flex-col gap-3">
+                              <button onClick={confirmEndChat} className="w-full bg-[#FF0000] hover:bg-[#D90000] text-white font-bold py-3.5 rounded-2xl active:scale-95 transition-all shadow-md">Akhiri Obrolan</button>
+                              <button onClick={()=>setShowEndModal(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3.5 rounded-2xl active:scale-95 transition-all">Batal</button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>, document.body
@@ -430,7 +447,7 @@ export function Header() {
       {promoState !== 'hidden' && typeof document !== 'undefined' && createPortal(
         <div className="fixed top-[320px] left-6 z-[40]">
           {promoState === 'exploding' && (<div className="relative km"><div className="ku text-green-600 text-[14px]" style={{"--tx":"-40px","--rot":"-45deg",animationDelay:"0s"}}>Rp 50K</div><div className="ku text-yellow-500 text-[16px]" style={{"--tx":"50px","--rot":"30deg",animationDelay:"0.1s"}}>Rp 100K</div><div className="ku text-green-500 text-[20px]" style={{"--tx":"0px","--rot":"180deg",animationDelay:"0.2s"}}>💸</div><div className="ku text-yellow-600 text-[18px]" style={{"--tx":"-20px","--rot":"-90deg",animationDelay:"0.3s"}}>🪙</div><div className="ku text-red-500 text-[14px]" style={{"--tx":"30px","--rot":"60deg",animationDelay:"0.15s"}}>Rp 200K</div></div>)}
-          {promoState === 'idle' && (<button onClick={()=>{setPromoState('progress'); setNotifs(p=>[{id:'sys',type:'app',time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}),title:'Sistem Aktif',text:'✨ Sistem deteksi nonton aktif! Diam & fokus nonton video untuk hasilkan saldo otomatis.'},...p]);}} className="flex flex-col items-center hover:scale-110 outline-none"><span className="text-[34px] drop-shadow-md relative z-10">🎁</span><div className="mt-[-8px] relative z-20"><span className="text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-md border border-white/50">{pTexts[tIdx]}</span></div></button>)}
+          {promoState === 'idle' && (<button onClick={()=>{setPromoState('progress'); setNotifs(p=>[{id:'sys',type:'app',time:getFullDate(),title:'Sistem Aktif',text:'✨ Sistem deteksi nonton aktif! Diam & fokus nonton video untuk hasilkan saldo otomatis.'},...p]);}} className="flex flex-col items-center hover:scale-110 outline-none"><span className="text-[34px] drop-shadow-md relative z-10">🎁</span><div className="mt-[-8px] relative z-20"><span className="text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-md border border-white/50">{pTexts[tIdx]}</span></div></button>)}
           {promoState === 'progress' && (<button onClick={() => setShowCoinMenu(true)} className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.15)] border-2 border-yellow-300 kh"><div className="w-6 h-6 rounded-full bk flex items-center justify-center text-white font-black text-[12px] shadow-inner border border-yellow-200">Rp</div><span className="text-[13px] font-black text-gray-800 tracking-tight">{balance.toLocaleString('id-ID')}</span></button>)}
         </div>, document.body
       )}
