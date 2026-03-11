@@ -6,54 +6,67 @@
 
 @layer base {
   :root {
-    --background: 250 15% 8%;
-    --foreground: 0 0% 98%;
+    /* BACKGROUND UTAMA: Putih Bersih */
+    --background: 0 0% 100%;
+    /* TEKS UTAMA: Hitam Pekat/Abu-abu gelap agar terbaca */
+    --foreground: 250 15% 10%;
 
-    --card: 250 15% 12%;
-    --card-foreground: 0 0% 98%;
+    /* WARNA KOTAK (Card/Film): Putih dengan sedikit bayangan */
+    --card: 0 0% 100%;
+    --card-foreground: 250 15% 10%;
 
-    --popover: 250 15% 10%;
-    --popover-foreground: 0 0% 98%;
+    /* POP-UP & DROPDOWN: Putih */
+    --popover: 0 0% 100%;
+    --popover-foreground: 250 15% 10%;
 
-    --primary: 280 100% 70%;
+    /* WARNA UTAMA HABI MUSIC (Pink/Ungu) */
+    --primary: 320 100% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 320 100% 65%;
+    /* WARNA KEDUA */
+    --secondary: 280 90% 65%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 250 15% 18%;
-    --muted-foreground: 250 10% 60%;
+    /* ELEMEN REDUP (Tombol nonaktif/Teks kecil) */
+    --muted: 0 0% 95%;
+    --muted-foreground: 250 10% 45%;
 
-    --accent: 200 100% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* WARNA LOGO/AKSEN */
+    --accent: 320 100% 95%;
+    --accent-foreground: 320 100% 50%;
 
+    /* WARNA TOMBOL HAPUS/ERROR */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 250 15% 20%;
-    --input: 250 15% 20%;
-    --ring: 280 100% 70%;
+    /* GARIS PEMBATAS: Abu-abu sangat tipis */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 320 100% 60%;
 
     --radius: 1rem;
 
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(280, 100%, 70%) 0%, hsl(320, 100%, 65%) 50%, hsl(350, 100%, 65%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(250, 15%, 14%) 0%, hsl(250, 15%, 10%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(280, 100%, 70%, 0.15) 0%, transparent 70%);
-    --gradient-hero: linear-gradient(180deg, hsl(250, 15%, 8%) 0%, hsl(280, 30%, 12%) 50%, hsl(250, 15%, 8%) 100%);
+    /* Custom gradients untuk Tema Terang */
+    --gradient-primary: linear-gradient(135deg, hsl(280, 90%, 65%) 0%, hsl(320, 100%, 60%) 50%, hsl(350, 100%, 65%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(0, 0%, 98%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(320, 100%, 60%, 0.1) 0%, transparent 70%);
     
-    /* Shadows */
-    --shadow-card: 0 8px 32px -8px hsl(280, 100%, 50%, 0.3);
-    --shadow-glow: 0 0 40px hsl(280, 100%, 70%, 0.4);
+    /* Background Gradient Halus (Putih ke Abu-abu sangat muda) */
+    --gradient-hero: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(0, 0%, 97%) 100%);
+    
+    /* Shadows - Disesuaikan agar lebih halus di background putih */
+    --shadow-card: 0 8px 30px -5px rgba(0, 0, 0, 0.08);
+    --shadow-glow: 0 0 40px hsl(320, 100%, 60%, 0.2);
 
-    --sidebar-background: 250 15% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 280 100% 70%;
+    /* SIDEBAR (Jika ada menu samping) */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 250 15% 10%;
+    --sidebar-primary: 320 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 15% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 250 15% 20%;
-    --sidebar-ring: 280 100% 70%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 250 15% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 320 100% 60%;
   }
 }
 
@@ -73,46 +86,36 @@
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
 
-  /* Global Subtitle Styling */
+  /* Subtitle Video (Tetap Gelap agar kontras dengan video) */
   video::cue {
-    /* Improve readability */
     background-color: rgba(0, 0, 0, 0.7) !important;
     color: white !important;
     font-family: 'Space Grotesk', system-ui, sans-serif !important;
-    
-    /* Responsive: Min 16px, dynamic growth, Max 24px */
     font-size: clamp(16px, 4vw, 24px) !important; 
     line-height: 1.4 !important; 
     padding: 2px 8px !important;
-    
-    /* Layout: Strict 80% width relative to video area */
     width: auto !important;
     max-width: 80% !important;
     white-space: pre-wrap !important;
     overflow-wrap: break-word !important;
     word-break: break-word !important;
-    
     margin: 0 auto !important;
     text-align: center !important;
-    
-    /* Force container lift for Webkit/Blink (Chrome, Edge, Safari) */
     text-shadow: 0 2px 4px rgba(0,0,0,0.8);
   }
 
-  /* Force container lift for Webkit/Blink */
   video::-webkit-media-text-track-container {
     transform: translateY(-5%) !important;
     position: relative !important;
   }
 
-  /* Mobile specific adjustments */
   @media (max-width: 640px) {
     video::cue {
       font-size: 18px !important;
       line-height: 1.3 !important;
       padding: 4px 8px !important;
       max-width: 95% !important;
-      background-color: rgba(0, 0, 0, 0.6) !important; /* Slightly more transparent like typical apps */
+      background-color: rgba(0, 0, 0, 0.6) !important; 
       text-shadow: 1px 1px 2px black !important;
     }
     
@@ -123,12 +126,13 @@
 }
 
 @layer components {
+  /* Kaca (Glassmorphism) untuk tema terang */
   .glass {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50;
+    @apply bg-white/70 backdrop-blur-xl border border-gray-200/50 shadow-sm;
   }
 
   .glass-strong {
-    @apply bg-card/80 backdrop-blur-2xl border border-border/60;
+    @apply bg-white/90 backdrop-blur-2xl border border-gray-200/80 shadow-md;
   }
 
   .gradient-text {
@@ -156,26 +160,27 @@
   }
 
   .card-hover {
-    @apply transition-all duration-300 ease-out;
+    @apply transition-all duration-300 ease-out bg-white rounded-2xl border border-gray-100;
   }
 
   .card-hover:hover {
-    transform: translateY(-8px) scale(1.02);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-card);
+    border-color: rgba(320, 100%, 60%, 0.3);
   }
 
   .tag-pill {
-    @apply px-3 py-1 text-xs font-medium rounded-full bg-muted/80 text-muted-foreground 
-           hover:bg-primary/20 hover:text-primary transition-colors duration-200;
+    @apply px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 
+           hover:bg-primary/10 hover:text-primary transition-colors duration-200 border border-gray-200;
   }
 
   .nav-link {
-    @apply relative px-4 py-2 text-sm font-medium text-muted-foreground 
-           hover:text-foreground transition-colors duration-200;
+    @apply relative px-4 py-2 text-sm font-medium text-gray-500 
+           hover:text-gray-900 transition-colors duration-200;
   }
 
   .nav-link.active {
-    @apply text-foreground;
+    @apply text-gray-900 font-bold;
   }
 
   .nav-link.active::after {
@@ -185,24 +190,24 @@
   }
 
   .search-input {
-    @apply w-full bg-muted/50 border border-border/50 rounded-2xl px-5 py-3 
-           text-foreground placeholder:text-muted-foreground
-           focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20
+    @apply w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3 
+           text-gray-900 placeholder:text-gray-400 shadow-inner
+           focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-white
            transition-all duration-300;
   }
 
   .badge-popular {
-    @apply px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md;
+    @apply px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md text-white shadow-sm;
     background: linear-gradient(135deg, hsl(350, 100%, 65%) 0%, hsl(320, 100%, 65%) 100%);
   }
 
   .episode-count {
     @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium 
-           bg-background/80 backdrop-blur-sm rounded-lg;
+           bg-black/60 text-white backdrop-blur-md rounded-lg;
   }
 
   .play-count {
-    @apply inline-flex items-center gap-1 text-xs text-muted-foreground;
+    @apply inline-flex items-center gap-1 text-xs text-gray-500;
   }
 }
 
@@ -248,4 +253,4 @@
   .animation-delay-300 {
     animation-delay: 300ms;
   }
-}
+    }
