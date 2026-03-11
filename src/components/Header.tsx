@@ -285,4 +285,16 @@ export function Header() {
               <span className="text-[28px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">🎁</span>
               
               {/* Teks Animasi dengan Background Putih Tipis agar sangat terbaca */}
-              <div className={`t
+              <div className={`transition-opacity duration-500 flex flex-col items-center text-center mt-0.5 ${fadeText ? 'opacity-100' : 'opacity-0'}`}>
+                <span className="text-[9px] font-extrabold text-[#FF0000] drop-shadow-md bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                  {promoTexts[textIndex]}
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
