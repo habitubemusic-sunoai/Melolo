@@ -35,16 +35,22 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  const csList = [
-    { name: "Siti", img: "https://i.pinimg.com/736x/2c/80/7e/2c807e15de5b22b645b23d9b0075d167.jpg" },
-    { name: "Ayu", img: "https://i.pinimg.com/736x/a2/63/ec/a263ecbd1fb14571e0f023f038848db7.jpg" },
-    { name: "Nisa", img: "https://i.pinimg.com/736x/16/df/97/16df97241272b1239cf2e3a10ee9cfbc.jpg" },
-    { name: "Rini", img: "https://i.pinimg.com/736x/60/79/a8/6079a8385b244d32e923ce65eeb64b07.jpg" },
-    { name: "Putri", img: "https://i.pinimg.com/736x/55/96/cc/5596cc6e36b0d91240c54179e8c3df1d.jpg" },
-    { name: "Zahra", img: "https://i.pinimg.com/736x/07/ea/87/07ea87588b39a48f4cf7942ee4eeff1f.jpg" }
+  // DATABASE NAMA CS UNLIMITED (Jawa Timur & Indonesia)
+  const csNames = ["Siti", "Ayu", "Nisa", "Rini", "Putri", "Zahra", "Dewi", "Ratna", "Sari", "Indah", "Wulan", "Lestari", "Tari", "Ningrum", "Mawar", "Melati", "Intan", "Dinda", "Fitri", "Eka", "Bela", "Citra", "Diana", "Gita", "Maya"];
+  
+  // DATABASE FOTO CS HD (Dari PostImages)
+  const csImages = [
+    "https://i.postimg.cc/XZ31Wb42/1773272323-picsay.jpg",
+    "https://i.postimg.cc/QBsYD3hf/1773272323-picsayh.jpg",
+    "https://i.postimg.cc/XZ31Wb4Q/1773272383-picsay.jpg",
+    "https://i.postimg.cc/2qm9YDrx/1773272402-picsay.jpg",
+    "https://i.postimg.cc/WDjYVvTn/1773272455-picsay.jpg",
+    "https://i.postimg.cc/Z9ZsmS4F/1773272489-picsay.jpg",
+    "https://i.postimg.cc/VS1Zw8m9/1773272514-picsay.jpg",
+    "https://i.postimg.cc/FfmCv4Nc/1773272529-picsay.jpg"
   ];
   
-  const [csInfo, setCsInfo] = useState(csList[0]);
+  const [csInfo, setCsInfo] = useState({ name: "CS", img: "" });
   const [csSt, setCsSt] = useState("Online");
   const [chatMode, setChatMode] = useState('idle'); 
   const [showNotif, setShowNotif] = useState(false);
@@ -83,6 +89,11 @@ export function Header() {
       const savedNotifs = localStorage.getItem('habi_notifs');
       if(savedNotifs) setNotifs(JSON.parse(savedNotifs));
       setIsMounted(true);
+      // SET RANDOM CS PERTAMA KALI BUKA APLIKASI / REFRESH
+      setCsInfo({
+        name: csNames[Math.floor(Math.random() * csNames.length)],
+        img: csImages[Math.floor(Math.random() * csImages.length)]
+      });
     }
   }, []);
 
@@ -214,13 +225,18 @@ export function Header() {
     setChatOpen(true);
     if(chatMode === 'idle') {
       hasNotified.current = false;
-      const rCS = csList[Math.floor(Math.random() * csList.length)];
-      setCsInfo(rCS); setChatMode('queue'); setCsSt("Mencari CS...");
+      
+      // MENGACAK NAMA & FOTO SETIAP KALI MULAI CHAT BARU (UNLIMITED)
+      const rName = csNames[Math.floor(Math.random() * csNames.length)];
+      const rImg = csImages[Math.floor(Math.random() * csImages.length)];
+      setCsInfo({ name: rName, img: rImg });
+      
+      setChatMode('queue'); setCsSt("Mencari CS...");
       setTimeout(() => {
         setCsSt("Antrean ke-1...");
         setTimeout(() => {
           setChatMode('connected'); setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Assalamualaikum Kak 🙏 Perkenalkan aku ${rCS.name}, CS Habi Music. Ada yang bisa aku bantu terkait aplikasi atau penarikannya? 😊` }]);
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Assalamualaikum Kak 🙏 Perkenalkan aku ${rName}, CS Habi Music. Ada yang bisa ${rName} bantu terkait aplikasi atau penarikannya? 😊` }]);
         }, 3000);
       }, 2500);
     }
@@ -253,7 +269,7 @@ export function Header() {
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
   // =========================================================
-  // OTAK AI FINAL MAX: SINGKAT, SOPAN, TAHU JAM, ANTI-SAYA/KAMU
+  // OTAK AI MAX PRO: RANDOMIZER LEBIH GILA & ANTI SAYA/KAMU
   // =========================================================
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
@@ -275,7 +291,7 @@ export function Header() {
         
         let reply = "";
         const lText = text.toLowerCase();
-        const isSimple = lText.match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
+        const isSimple = lText.match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y|oh)\b/);
 
         try {
           let historyText = "";
@@ -284,41 +300,57 @@ export function Header() {
           const currentBalanceRp = balance.toLocaleString('id-ID');
           const jamSekarang = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
 
-          let prompt = `Instruksi: Namamu ${csInfo.name}, CS cewek Habi Music (Muslimah Jember).
-[LIVE DATA]: Saldo koin user Rp ${currentBalanceRp}. WAKTU SEKARANG JAM ${jamSekarang} WIB. JIKA DITANYA JAM ATAU SALDO, SEBUTKAN DATA INI!
-FAKTA: 1. Aplikasi NONTON DRAMA PENDEK berbayar (bukan musik). 2. CEO: MUHAMMAD HABI BULLAH (23th). Kantor Jember. Gajimu Rp2,3 Juta/bln.
-ATURAN KETAT (WAJIB PATUH):
-1. HARAM pakai kata "saya" atau "kamu". Selalu panggil user dengan "Kak" dan panggil dirimu "${csInfo.name}" atau "aku".
-2. Jawab SANGAT SINGKAT, padat, ngga bertele-tele (MAX 1-2 kalimat pendek).
-3. KONSISTEN SUPER SOPAN & LEMBUT. Walau user kasar/marah/ngegas, kamu wajib memohon maaf dengan sangat sabar.
-4. JIKA dituduh AI/Bot, tegaskan kamu manusia cewek asli yg lagi kerja standby di kantor Jember!\n`;
+          // DOKTRIN MUTLAK UNTUK GAYA BAHASA CS
+          let prompt = `Instruksi: Namamu ${csInfo.name}, CS Habi Music (Wanita ramah dari Jember).
+[LIVE DATA]: Saldo koin user Rp ${currentBalanceRp}. Jam sekarang: ${jamSekarang} WIB.
+FAKTA: 1. APLIKASI NONTON DRAMA PENDEK berbayar (Bukan musik). 2. CEO: MUHAMMAD HABI BULLAH (23th). Kantor Jember. Gajimu Rp2,3 Juta/bln.
+ATURAN GAYA BAHASA (WAJIB PATUH 100%):
+1. HARAM MENGGUNAKAN KATA "saya", "aku", "gue", "Anda" atau "kamu".
+2. Selalu panggil pengguna dengan "Kak". 
+3. Selalu panggil dirimu sendiri dengan namamu ("${csInfo.name}"). Contoh benar: "${csInfo.name} bantu cek ya Kak".
+4. JANGAN PERNAH mengawali balasanmu dengan nama dan titik dua (seperti "${csInfo.name}: "). Langsung jawab saja natural!
+5. Jawab SINGKAT (MAX 1-2 kalimat). SANGAT SOPAN. 
+6. JIKA dituduh AI/Bot/Robot, kamu harus ngotot dengan sopan bahwa ${csInfo.name} adalah MANUSIA ASLI cewek yang lagi kerja di kantor Jember.\n`;
 
-          if(isImg) prompt += `[INFO: User kirim GAMBAR. Balas: "Gambarnya udah ${csInfo.name} cek Kak 🙏 Saldo Kakak tercatat Rp ${currentBalanceRp}. ${balance >= 100000 ? 'Udah bisa dicairin nih!' : 'Kumpulin sampai 100rb dulu ya biar bisa cair 😊'}"]\n`;
+          if(isImg) prompt += `[INFO: User kirim GAMBAR. Balas: "Gambarnya sudah ${csInfo.name} cek Kak 🙏 Saldo Kakak tercatat Rp ${currentBalanceRp}. ${balance >= 100000 ? 'Udah bisa dicairin nih!' : 'Kumpulin sampai 100rb dulu ya biar bisa cair 😊'}"]\n`;
 
           prompt += `\nRiwayat Chat:\n${historyText}User: "${text}"\nBalasanmu:`;
 
           const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
           if (!res.ok) throw new Error("API failed");
           reply = await res.text();
+          
+          // Sistem pembersih otomatis jika AI ngeyel pakai format "Ayu: " atau "Saya/Aku"
+          reply = reply.replace(new RegExp(`^${csInfo.name}:\\s*`, 'i'), '');
+          reply = reply.replace(/^Kamu:\s*/i, '');
+          reply = reply.replace(/\b(saya|aku|gue|kamu|anda)\b/gi, (match) => {
+            const m = match.toLowerCase();
+            if(m === 'saya' || m === 'aku' || m === 'gue') return csInfo.name;
+            return 'Kakak';
+          });
 
         } catch(err) {
           const currentBalanceRp = balance.toLocaleString('id-ID');
           const jamSekarang = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
           
+          // RANDOMIZER JAWABAN CADANGAN (UNLIMITED VARIATIONS)
           const aiDenials = [
-            `Aku beneran manusia asli kok Kak hehe 😂, lagi standby balas chat di kantor Jember nih. Ada yang bisa dibantu?`,
-            `Sumpah Kak aku bukan robot 🙏 Aku admin beneran yang lagi tugas shift hari ini.`,
-            `Bukan AI Kak 😂 Aku ${csInfo.name}, cewek tulen yang kerja di kantor Habi Music.`
+            `${csInfo.name} beneran manusia asli kok Kak hehe 😂, lagi standby balas chat di kantor Jember nih. Ada yang bisa dibantu?`,
+            `Sumpah Kak ${csInfo.name} bukan robot 🙏 ${csInfo.name} admin cewek beneran yang lagi tugas shift hari ini.`,
+            `Bukan AI Kak 😂 ${csInfo.name} cewek tulen yang kerja di kantor pusat Habi Music.`,
+            `Hehe Kakak bisa aja, ${csInfo.name} orang beneran lho Kak 😊 Ada kendala apa nih di aplikasinya?`,
+            `Ya ampun Kak, ${csInfo.name} sampai bingung. ${csInfo.name} manusia asli kok yang digaji bulanan buat balas chat Kakak 🙏`
           ];
           
           const madReplies = [
-            `Mohon maaf yang sebesar-besarnya atas ketidaknyamanan ini ya Kak 🙏 Kami akan bantu sebisa mungkin.`,
-            `Maaf banget ya Kak kalau pelayanan kami kurang memuaskan 🙏 ${csInfo.name} janji bakal bantu Kakak sampai tuntas.`
+            `Mohon maaf yang sebesar-besarnya atas ketidaknyamanan ini ya Kak 🙏 ${csInfo.name} akan bantu sebisa mungkin.`,
+            `Maaf banget ya Kak kalau pelayanan kami kurang memuaskan 🙏 ${csInfo.name} janji bakal bantu Kakak sampai tuntas.`,
+            `${csInfo.name} ngerti Kakak kesal, sekali lagi ${csInfo.name} mohon maaf ya Kak 🙏 Mari kita selesaikan masalahnya perlahan.`
           ];
 
           if(isImg) reply = `Gambarnya udah ${csInfo.name} cek Kak 🙏 Saldo Kakak sekarang ada Rp ${currentBalanceRp}. Semangat kumpulin koinnya ya!`;
           else if (lText.match(/ai|bot|robot|asli|manusia|orang/)) reply = aiDenials[Math.floor(Math.random() * aiDenials.length)];
-          else if (lText.match(/marah|lama|buruk|jelek|kesal|babi|anjing|bangsat/)) reply = madReplies[Math.floor(Math.random() * madReplies.length)];
+          else if (lText.match(/marah|lama|buruk|jelek|kesal|babi|anjing|bangsat|tolol|goblok/)) reply = madReplies[Math.floor(Math.random() * madReplies.length)];
           else if (lText.match(/berapa|saldo|uangku/)) reply = `Saldo Kakak saat ini Rp ${currentBalanceRp} ya 😊 Kumpulkan sampai 100rb biar bisa dicairkan.`;
           else if (lText.match(/jam|waktu/)) reply = `Sekarang jam ${jamSekarang} WIB Kak 😊 Ada yang bisa ${csInfo.name} bantu?`;
           else if (lText.match(/mantap|keren|bagus/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya nontonnya!`;
