@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, Paperclip, Smile } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, Paperclip, Smile, Video, Phone, MoreVertical } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -247,12 +247,14 @@ export function Header() {
     const file = e.target.files[0];
     if(!file) return;
     const url = URL.createObjectURL(file);
-    sendChatCore("Ini bukti screenshot dari aku ya kak", true, url);
+    sendChatCore("Kak tolong cek screenshot aku ini ya", true, url);
   };
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
-  // OTAK AI ULTRA PINTAR - UNLIMITED WORDS & RANDOMIZER
+  // =========================================================
+  // OTAK AI FINAL MAX: SINGKAT, SOPAN, TAHU JAM, ANTI-SAYA/KAMU
+  // =========================================================
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
@@ -280,14 +282,18 @@ export function Header() {
           chats.slice(-6).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
 
           const currentBalanceRp = balance.toLocaleString('id-ID');
+          const jamSekarang = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
 
-          let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS Habi Music.
-[DATABASE]: Saldo koin user adalah Rp ${currentBalanceRp}. Minimal ditarik Rp 100.000. JIKA USER TANYA SALDO, SEBUTKAN ANGKA Rp ${currentBalanceRp}!
-FAKTA: 1. APLIKASI NONTON DRAMA, BUKAN MUSIK. 2. CEO: MUHAMMAD HABI BULLAH (23 thn). Server: Surabaya. Kantor: Jember, Mumbulsari. Gajimu: Rp 2,3 Juta/bulan.
-ATURAN KETAT: JIKA USER MENGIRA KAMU AI/ROBOT, SANGKAL DENGAN TEGAS TAPI RAMAH! TEGASKAN KAMU MANUSIA ASLI DI JEMBER! JANGAN MENGULANG KALIMAT YANG SAMA, BUAT VARIASI JAWABAN BERBEDA TERUS-MENERUS!
-SIFAT: Sangat sabar, super ramah. Jawab MAX 2 kalimat.\n`;
+          let prompt = `Instruksi: Namamu ${csInfo.name}, CS cewek Habi Music (Muslimah Jember).
+[LIVE DATA]: Saldo koin user Rp ${currentBalanceRp}. WAKTU SEKARANG JAM ${jamSekarang} WIB. JIKA DITANYA JAM ATAU SALDO, SEBUTKAN DATA INI!
+FAKTA: 1. Aplikasi NONTON DRAMA PENDEK berbayar (bukan musik). 2. CEO: MUHAMMAD HABI BULLAH (23th). Kantor Jember. Gajimu Rp2,3 Juta/bln.
+ATURAN KETAT (WAJIB PATUH):
+1. HARAM pakai kata "saya" atau "kamu". Selalu panggil user dengan "Kak" dan panggil dirimu "${csInfo.name}" atau "aku".
+2. Jawab SANGAT SINGKAT, padat, ngga bertele-tele (MAX 1-2 kalimat pendek).
+3. KONSISTEN SUPER SOPAN & LEMBUT. Walau user kasar/marah/ngegas, kamu wajib memohon maaf dengan sangat sabar.
+4. JIKA dituduh AI/Bot, tegaskan kamu manusia cewek asli yg lagi kerja standby di kantor Jember!\n`;
 
-          if(isImg) prompt += `[INFO: User kirim GAMBAR. Abaikan chat lain, balas: "Gambarnya sudah ${csInfo.name} terima ya kak 🙏 Berdasarkan sistem, saldo Kakak tercatat Rp ${currentBalanceRp}. ${balance >= 100000 ? 'Sudah bisa ditarik nih!' : 'Masih kurang dari 100rb, yuk nonton drama lagi 😊'}"]\n`;
+          if(isImg) prompt += `[INFO: User kirim GAMBAR. Balas: "Gambarnya udah ${csInfo.name} cek Kak 🙏 Saldo Kakak tercatat Rp ${currentBalanceRp}. ${balance >= 100000 ? 'Udah bisa dicairin nih!' : 'Kumpulin sampai 100rb dulu ya biar bisa cair 😊'}"]\n`;
 
           prompt += `\nRiwayat Chat:\n${historyText}User: "${text}"\nBalasanmu:`;
 
@@ -297,32 +303,31 @@ SIFAT: Sangat sabar, super ramah. Jawab MAX 2 kalimat.\n`;
 
         } catch(err) {
           const currentBalanceRp = balance.toLocaleString('id-ID');
+          const jamSekarang = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
           
-          // RANDOMIZER UNTUK JAWABAN CADANGAN BIAR TIDAK KAKU
           const aiDenials = [
-            `Aku beneran manusia asli kok Kak hehe 😂, kerjanya standby balas chat di kantor Jember. Ada yang bisa ${csInfo.name} bantu?`,
-            `Sumpah Kak aku bukan robot 🙏 Aku admin asli yang lagi tugas shift hari ini.`,
-            `Hehe Kakak bisa aja, aku orang beneran lho Kak 😊 Ada kendala apa nih di aplikasinya?`,
-            `Bukan AI Kak 😂 Aku ${csInfo.name}, cewek tulen yang kerja di kantor Habi Music Jember.`
+            `Aku beneran manusia asli kok Kak hehe 😂, lagi standby balas chat di kantor Jember nih. Ada yang bisa dibantu?`,
+            `Sumpah Kak aku bukan robot 🙏 Aku admin beneran yang lagi tugas shift hari ini.`,
+            `Bukan AI Kak 😂 Aku ${csInfo.name}, cewek tulen yang kerja di kantor Habi Music.`
           ];
           
           const madReplies = [
             `Mohon maaf yang sebesar-besarnya atas ketidaknyamanan ini ya Kak 🙏 Kami akan bantu sebisa mungkin.`,
-            `Maaf banget ya Kak kalau pelayanan kami kurang memuaskan 🙏 ${csInfo.name} di sini siap dengerin keluhan Kakak.`,
-            `Aduh maaf ya Kak 🙏 Tolong sabar sebentar, aku bantu cek perlahan ya biar masalahnya cepat beres.`
+            `Maaf banget ya Kak kalau pelayanan kami kurang memuaskan 🙏 ${csInfo.name} janji bakal bantu Kakak sampai tuntas.`
           ];
 
-          if(isImg) reply = `Gambarnya udah ${csInfo.name} terima ya Kak 🙏 Cek saldo Kakak sekarang ada Rp ${currentBalanceRp}. Semangat kumpulin koinnya ya Kak!`;
+          if(isImg) reply = `Gambarnya udah ${csInfo.name} cek Kak 🙏 Saldo Kakak sekarang ada Rp ${currentBalanceRp}. Semangat kumpulin koinnya ya!`;
           else if (lText.match(/ai|bot|robot|asli|manusia|orang/)) reply = aiDenials[Math.floor(Math.random() * aiDenials.length)];
           else if (lText.match(/marah|lama|buruk|jelek|kesal|babi|anjing|bangsat/)) reply = madReplies[Math.floor(Math.random() * madReplies.length)];
-          else if (lText.match(/berapa|saldo|uangku/)) reply = `Saldo Kakak saat ini tercatat Rp ${currentBalanceRp} ya Kak 😊 Kumpulkan sampai 100rb biar bisa dicairkan.`;
-          else if (lText.match(/mantap|keren|bagus/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya Kak. Ada lagi yang bisa dibantu?`;
+          else if (lText.match(/berapa|saldo|uangku/)) reply = `Saldo Kakak saat ini Rp ${currentBalanceRp} ya 😊 Kumpulkan sampai 100rb biar bisa dicairkan.`;
+          else if (lText.match(/jam|waktu/)) reply = `Sekarang jam ${jamSekarang} WIB Kak 😊 Ada yang bisa ${csInfo.name} bantu?`;
+          else if (lText.match(/mantap|keren|bagus/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya nontonnya!`;
           else if (lText.match(/\b(assalamu|salam)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu?`;
-          else if (lText.match(/cair|tarik|dana/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak. Proses 1-3 hari kerja 😊";
-          else reply = `Baik Kak, ${csInfo.name} paham 🙏 Terus kelanjutannya gimana tuh Kak? Di aplikasinya aman kan nggak ada error?`;
+          else if (lText.match(/cair|tarik|dana/)) reply = `Minimal penarikan Rp 100.000 Kak. Prosesnya 1-3 hari kerja ya 😊`;
+          else reply = `Baik Kak 🙏 Terus kelanjutannya gimana tuh? Aplikasinya aman lancar kan?`;
         }
 
-        const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2500), 7000);
+        const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2000), 5000);
         const typingDuration = baseTyping + Math.floor(Math.random() * 1000); 
 
         setTimeout(() => {
@@ -396,8 +401,7 @@ SIFAT: Sangat sabar, super ramah. Jawab MAX 2 kalimat.\n`;
                               )}
                             </div>
                             <button onClick={()=>{
-                              const newNotifs = notifs.filter(x=>x.id!==n.id);
-                              setNotifs(newNotifs);
+                              const newNotifs = notifs.filter(x=>x.id!==n.id); setNotifs(newNotifs);
                               if(n.id==='yt') localStorage.setItem('habi_yt_del',Date.now().toString());
                               if(newNotifs.length === 0) localStorage.removeItem('habi_notifs');
                             }} className="text-gray-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button>
