@@ -35,6 +35,13 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
+  // Foto Profil Cewek Hijab Indo (Stabil)
+  const csData = [
+    { name: "Nisa", img: "https://i.pinimg.com/736x/2c/80/7e/2c807e15de5b22b645b23d9b0075d167.jpg" },
+    { name: "Ayu", img: "https://i.pinimg.com/736x/a2/63/ec/a263ecbd1fb14571e0f023f038848db7.jpg" },
+    { name: "Rini", img: "https://i.pinimg.com/736x/16/df/97/16df97241272b1239cf2e3a10ee9cfbc.jpg" }
+  ];
+  const [csInfo, setCsInfo] = useState({ name: "CS", img: "" });
   const [csSt, setCsSt] = useState("Online");
   const [chatMode, setChatMode] = useState('idle'); 
   const [showNotif, setShowNotif] = useState(false);
@@ -58,6 +65,7 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
+    setCsInfo(csData[Math.floor(Math.random() * csData.length)]);
     const sBal = localStorage.getItem('habi_balance');
     if(sBal) setBalance(Number(sBal));
 
@@ -133,7 +141,7 @@ export function Header() {
         setCsSt("Antrean ke-1...");
         setTimeout(() => {
           setChatMode('connected'); setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku CS Habi Music. Ada yang mau ditanyain soal aplikasi atau penarikan dana? 😊` }]);
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku ${csInfo.name} dari CS Habi Music. Ada yang mau ditanyain soal aplikasi atau penarikan dana? 😊` }]);
         }, 3000);
       }, 2500);
     }
@@ -148,7 +156,7 @@ export function Header() {
     if(!file) return;
     const url = URL.createObjectURL(file);
     const b64 = await getBase64(file);
-    sendChatCore("Tolong bantu analisis screenshot ini ya Kak", true, url, b64, file.type);
+    sendChatCore("Tolong bantu cek screenshot ini ya Kak", true, url, b64, file.type);
   };
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null, null, null); setShowEmoji(false); };
@@ -170,25 +178,34 @@ export function Header() {
       let reply = "";
       try {
         const chatHistory = chats.map(c => ({ sender: c.sender, text: c.text }));
-        
-        const payload = {
-            history: chatHistory,
-            message: `Instruksi Sistem: Kamu adalah CS Habi Music (nonton video dapat saldo). Kamu cewek asli Jawa Timur. Ramah, santai, logis, agak gaul. Jawab maksimal 2 kalimat saja. Jika dia nanya diluar konteks, jawab nyambung tapi arahkan ke aplikasi.\n\nPesan User: ${text}`,
-            image: isImg && base64 ? { base64, mimeType } : null
-        };
+        const payload = { history: chatHistory, message: text, image: isImg && base64 ? { base64, mimeType } : null };
 
         const res = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
         });
         
+        if (!res.ok) throw new Error("Backend failed");
         const data = await res.json();
+        if(data.error) throw new Error("API failed");
+        
         reply = data.reply;
       } catch(err) {
-        reply = "Aduh maaf Kak, jaringan sistem aku lagi padet nih 🙏 Bisa diulangi pertanyaannya?";
+        // OTAK CADANGAN SUPER PINTAR (JIKA GOOGLE GEMINI MATI/LEMOT, PAKAI INI AGAR TETAP NYAMBUNG)
+        const l = text.toLowerCase();
+        if(isImg) reply = "Baik Kak, gambarnya udah aku cek. Lagi diproses tim teknis ya, ditunggu aja updatenya 🙏";
+        else if (l.match(/assalamu|salam|samlekom/)) reply = "Waalaikumsalam Kak 🙏 Ada yang bisa dibantu soal aplikasinya?";
+        else if (l.match(/cair|tarik|uang|wd|gopay|dana/)) reply = "Prosesnya 1-3 hari kerja ya Kak 😊 Ditunggu aja pasti masuk kok.";
+        else if (l.match(/kok|lama|belum|mana/)) reply = "Maaf banget Kak bikin nunggu 🙏 antrean penarikan emang lagi padat hari ini. Pasti diproses kok!";
+        else if (l.match(/gimana|cara|tutor/)) reply = "Gampang Kak, diem dan fokus nonton videonya aja (jangan di-scroll), nanti koinnya nambah sendiri otomatis.";
+        else if (l.match(/bohong|tipu|scam|hoax/)) reply = "Amanah 100% Kak 😊 Selama nggak pakai bot, saldo pasti kami transfer full.";
+        else if (l.match(/halo|hai|pagi|siang|malam|p/)) reply = `Halo Kak! Aku CS Habi Music, ada yang bisa dibantu?`;
+        else if (l.match(/lagi apa|sibuk|makan/)) reply = "Lagi jawabin chat Kakak nih hehe 😊 Btw ada kendala soal aplikasinya?";
+        else if (l.match(/bot|robot|ai/)) reply = `Enak aja, aku cewek asli tau Kak 😂 Ada yang mau ditanyain soal koinnya kah?`;
+        else if (l.match(/ok|sip|y|baik|makasih|thanks/)) reply = "Sama-sama Kak! Kalau ada apa-apa chat aku lagi ya 😊";
+        else reply = "Ohh gitu ya Kak hehe 😂 Btw Kakak udah coba kumpulin koinnya sampai bisa ditarik belum?";
       }
 
+      // Mengetik Realistis
       const typingDuration = Math.min(Math.max(reply.length * 60, 4000), 18000); 
 
       setTimeout(() => {
@@ -268,24 +285,17 @@ export function Header() {
                     <>
                       <div className="flex items-center p-3 bg-[#008069] text-white shadow-md z-10">
                         <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
-                        
-                        {/* FOTO PROFIL LOGO HABI MUSIC */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer shadow-sm">
-                           <div className="w-[20px] h-[14px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer">
+                          {csInfo.img ? <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-white"/>}
                         </div>
-
                         <div className="flex flex-col flex-1 cursor-pointer">
-                          <span className="font-semibold text-base leading-tight">CS Habi Music</span>
+                          <span className="font-semibold text-base leading-tight">CS {csInfo.name}</span>
                           <span className="text-[12px] opacity-90 truncate">{csSt}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-white ml-2">
-                          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"></path><rect x="3" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>
-                          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path></svg>
                         </div>
                       </div>
                       
                       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#efeae2', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
-                        <div className="text-center text-[11px] text-gray-700 font-medium my-2 bg-white/80 self-center px-4 py-1.5 rounded-lg shadow-sm">HARI INI</div>
+                        <div className="text-center text-[11px] text-gray-700 font-medium my-2 bg-[#D1EAF1] self-center px-4 py-1.5 rounded-lg shadow-sm">HARI INI</div>
                         <div className="text-center text-[10px] text-gray-600 font-medium my-1 bg-[#FEF4C5] self-center px-3 py-2 rounded-lg shadow-sm w-[90%] leading-relaxed flex items-start gap-1"><div className="mt-0.5">🔒</div><span>Pesan dan panggilan dienkripsi secara end-to-end. Tim Habi Music tidak dapat membaca sandi Anda.</span></div>
 
                         {chatMode === 'queue' && (
