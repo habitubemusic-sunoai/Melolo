@@ -35,7 +35,6 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  // Foto Profil Cewek Hijab Indo (Stabil)
   const csData = [
     { name: "Nisa", img: "https://i.pinimg.com/736x/2c/80/7e/2c807e15de5b22b645b23d9b0075d167.jpg" },
     { name: "Ayu", img: "https://i.pinimg.com/736x/a2/63/ec/a263ecbd1fb14571e0f023f038848db7.jpg" },
@@ -190,22 +189,21 @@ export function Header() {
         
         reply = data.reply;
       } catch(err) {
-        // OTAK CADANGAN SUPER PINTAR (JIKA GOOGLE GEMINI MATI/LEMOT, PAKAI INI AGAR TETAP NYAMBUNG)
+        // JIKA GOOGLE GEMINI GAGAL/KUNCI SALAH, OTOMATIS PAKAI OTAK CADANGAN INI (SANGAT PINTAR)
         const l = text.toLowerCase();
-        if(isImg) reply = "Baik Kak, gambarnya udah aku cek. Lagi diproses tim teknis ya, ditunggu aja updatenya 🙏";
-        else if (l.match(/assalamu|salam|samlekom/)) reply = "Waalaikumsalam Kak 🙏 Ada yang bisa dibantu soal aplikasinya?";
-        else if (l.match(/cair|tarik|uang|wd|gopay|dana/)) reply = "Prosesnya 1-3 hari kerja ya Kak 😊 Ditunggu aja pasti masuk kok.";
-        else if (l.match(/kok|lama|belum|mana/)) reply = "Maaf banget Kak bikin nunggu 🙏 antrean penarikan emang lagi padat hari ini. Pasti diproses kok!";
-        else if (l.match(/gimana|cara|tutor/)) reply = "Gampang Kak, diem dan fokus nonton videonya aja (jangan di-scroll), nanti koinnya nambah sendiri otomatis.";
-        else if (l.match(/bohong|tipu|scam|hoax/)) reply = "Amanah 100% Kak 😊 Selama nggak pakai bot, saldo pasti kami transfer full.";
-        else if (l.match(/halo|hai|pagi|siang|malam|p/)) reply = `Halo Kak! Aku CS Habi Music, ada yang bisa dibantu?`;
-        else if (l.match(/lagi apa|sibuk|makan/)) reply = "Lagi jawabin chat Kakak nih hehe 😊 Btw ada kendala soal aplikasinya?";
-        else if (l.match(/bot|robot|ai/)) reply = `Enak aja, aku cewek asli tau Kak 😂 Ada yang mau ditanyain soal koinnya kah?`;
-        else if (l.match(/ok|sip|y|baik|makasih|thanks/)) reply = "Sama-sama Kak! Kalau ada apa-apa chat aku lagi ya 😊";
-        else reply = "Ohh gitu ya Kak hehe 😂 Btw Kakak udah coba kumpulin koinnya sampai bisa ditarik belum?";
+        if(isImg) reply = "Baik Kak, gambar screenshotnya udah aku terima ya. Sebentar aku teruskan ke tim teknis biar dicek 🙏 Ditunggu ya Kak.";
+        else if (l.match(/assalamu|salam|samlekom/)) reply = "Waalaikumsalam Kak 🙏 Ada yang bisa aku bantu untuk aplikasi Habi Music-nya?";
+        else if (l.match(/cair|tarik|uang|wd|gopay|dana/)) reply = "Untuk pencairan saldo biasanya butuh waktu 1-3 hari kerja Kak 😊 Mohon ditunggu ya.";
+        else if (l.match(/kok|lama|belum|mana/)) reply = "Aduh maaf banget ya Kak bikin nunggu 🙏 Antrean penarikan hari ini emang lagi padat banget. Pasti masuk kok uangnya!";
+        else if (l.match(/gimana|cara|tutor|dapet/)) reply = "Gampang banget Kak. Kakak tinggal diem dan fokus nonton videonya aja tanpa di-scroll, nanti koinnya nambah otomatis.";
+        else if (l.match(/bohong|tipu|scam|hoax/)) reply = "Kita amanah 100% kok Kak 😊 Selama Kakak nggak pakai bot atau curang, saldo pasti kami transfer.";
+        else if (l.match(/halo|hai|pagi|siang|malam|p|woi/)) reply = `Halo Kak! Aku ${csInfo.name} dari CS Habi Music. Ada kendala yang bisa aku bantu?`;
+        else if (l.match(/lagi apa|sibuk|makan/)) reply = "Lagi standby nungguin chat dari Kakak nih hehe 😊 Ada kendala soal penarikan saldonya?";
+        else if (l.match(/bot|robot|ai/)) reply = `Enak aja dibilang bot, aku cewek asli tau Kak 😂 Ada kendala apa nih di aplikasinya?`;
+        else if (l.match(/ok|sip|y|baik|makasih|thanks|yaudah/)) reply = "Siap Kak! Sama-sama ya. Kalau ada kendala lain jangan sungkan chat aku lagi 😊";
+        else reply = "Walah gitu ya Kak hehe 😂 Terus kelanjutannya gimana tuh? Btw untuk koin aplikasinya sejauh ini aman kan?";
       }
 
-      // Mengetik Realistis
       const typingDuration = Math.min(Math.max(reply.length * 60, 4000), 18000); 
 
       setTimeout(() => {
@@ -285,12 +283,15 @@ export function Header() {
                     <>
                       <div className="flex items-center p-3 bg-[#008069] text-white shadow-md z-10">
                         <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer border border-white/20">
                           {csInfo.img ? <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-white"/>}
                         </div>
                         <div className="flex flex-col flex-1 cursor-pointer">
                           <span className="font-semibold text-base leading-tight">CS {csInfo.name}</span>
                           <span className="text-[12px] opacity-90 truncate">{csSt}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-white ml-2">
+                          <Video className="w-5 h-5 opacity-80"/><Phone className="w-5 h-5 opacity-80"/><MoreVertical className="w-5 h-5 opacity-80"/>
                         </div>
                       </div>
                       
@@ -304,7 +305,7 @@ export function Header() {
 
                         {chatMode === 'connected' && chats.map(c => (
                           <div key={c.id} className={`flex flex-col max-w-[85%] ${c.sender === 'user' ? 'self-end' : 'self-start'}`}>
-                            <div className={`p-2 rounded-lg text-[14px] shadow-sm relative ${c.sender === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
+                            <div className={`p-2 rounded-lg text-[14px] shadow-[0_1px_1px_rgba(0,0,0,0.1)] relative ${c.sender === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
                               {c.img && <img src={c.img} className="w-full max-w-[200px] rounded-md mb-1 border border-gray-200" alt="uploaded"/>}
                               {c.text && <p className="text-[#111111] break-words pr-12 pb-2 pl-1 leading-snug">{c.text}</p>}
                               <div className="absolute right-1.5 bottom-1 flex items-center gap-1">
@@ -322,7 +323,7 @@ export function Header() {
                             {emojis.map(e => <button type="button" key={e} onClick={() => setChatInput(p => p+e)} className="text-xl hover:scale-125 transition-transform">{e}</button>)}
                           </div>
                         )}
-                        <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm min-h-[44px]">
+                        <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm border border-gray-200 min-h-[44px]">
                            <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2 flex-shrink-0 ${showEmoji ? 'text-[#008069]' : 'text-gray-500'}`}><Smile className="w-6 h-6"/></button>
                            <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
                            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
