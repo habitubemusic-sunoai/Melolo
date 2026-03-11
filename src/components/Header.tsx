@@ -140,26 +140,19 @@ export function Header() {
     }
   };
 
-  const getBase64 = (file) => new Promise((res) => {
-    const reader = new FileReader(); 
-    reader.readAsDataURL(file); 
-    reader.onload = () => res(reader.result.split(',')[1]);
-  });
-
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if(!file) return;
     const url = URL.createObjectURL(file);
-    const b64 = await getBase64(file);
-    sendChatCore("Kak tolong cek screenshot saldoku ini ya", true, url, b64, file.type);
+    sendChatCore("Ini aku kirim screenshot ya kak", true, url);
   };
 
-  const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null, null, null); setShowEmoji(false); };
+  const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
   // ===============================================
-  // OTAK AI GEMINI (BUG GAMBAR SUDAH DIPERBAIKI!)
+  // OTAK AI CANGGIH (TANPA API KEY) + SISTEM MEMORI
   // ===============================================
-  const sendChatCore = async (text, isImg=false, imgUrl=null, base64=null, mimeType=null) => {
+  const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
     
@@ -168,7 +161,7 @@ export function Header() {
     setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:text, img:imgUrl, status:'sent' }]);
     if(!isImg) setChatInput("");
 
-    const readDelay = Math.floor(Math.random() * 2000) + 1000; 
+    const readDelay = Math.floor(Math.random() * 1500) + 1000; 
     
     setTimeout(async () => {
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
@@ -176,49 +169,38 @@ export function Header() {
       
       let reply = "";
       try {
-        const k1 = "AIzaSyDNY0R";
-        const k2 = "F6v-dyisBx0";
-        const k3 = "vTs7-IibyokL0DAGY";
-        const superKey = k1 + k2 + k3;
+        // SISTEM MEMORI: AI Mengingat 4 percakapan terakhir agar nyambung!
+        let historyText = "";
+        chats.slice(-4).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
 
-        let sysPrompt = "Instruksi Mutlak: Kamu adalah CS aplikasi Habi Music (cewek asal Jawa Timur). Aplikasi ini membayar user nonton video. Minimal penarikan saldo adalah Rp 100.000. Jawab singkat (1-2 kalimat), santai, logis. JIKA USER KIRIM SCREENSHOT SALDO, BACA SALDONYA, LALU JELASKAN APAKAH SUDAH BISA DITARIK ATAU BELUM.\n\nRiwayat Obrolan:\n";
-        chats.forEach(c => { sysPrompt += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n` });
-        sysPrompt += `User: ${text}\nKamu:`;
+        let prompt = `Instruksi Mutlak: Kamu adalah CS Habi Music (Cewek Jawa Timur berhijab). Aplikasi ini menghasilkan uang dengan nonton video. Minimal penarikan saldo Rp 100.000. Jawab sangat singkat (maksimal 2 kalimat), santai, tidak kaku, dan seperti manusia. JANGAN PERNAH MENYEBUT DIRIMU AI ATAU ROBOT.\n`;
 
-        const parts = [{ text: sysPrompt }];
-        
-        // PERBAIKAN FATAL: Menggunakan inlineData (CamelCase) agar Google bisa melihat gambar
-        if(isImg && base64) {
-          parts.push({ 
-            inlineData: { 
-              mimeType: mimeType, 
-              data: base64 
-            } 
-          });
+        // SISTEM SIMULASI MATA: Jika user kirim foto, AI dipaksa "melihat"
+        if(isImg) {
+          prompt += `\n[SISTEM RAHASIA: User baru saja mengirim GAMBAR SCREENSHOT. Kamu harus membalas: "Gambarnya udah aku cek kak. Kalau saldonya masih di bawah 100rb belum bisa ditarik ya, minimal penarikan 100rb. Semangat nonton terus biar koinnya cepat cair! 😊"]\n`;
         }
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${superKey}`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ role: "user", parts: parts }] })
-        });
-        
+        prompt += `\nRiwayat Obrolan:\n${historyText}User: ${text}\nKamu:`;
+
+        const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
         if (!res.ok) throw new Error("API failed");
-        const data = await res.json();
-        reply = data.candidates[0].content.parts[0].text;
+        reply = await res.text();
 
       } catch(err) {
+        // Fallback jika internet pengguna putus
         const l = text.toLowerCase();
-        if(isImg) reply = "Saldonya kelihatannya belum sampai 100rb Kak 😊 Terus tonton video tanpa di-scroll biar koinnya nambah ya.";
-        else if (l.match(/\b(assalamu|salam|samlekom)\b/)) reply = "Waalaikumsalam Kak 🙏 Ada yang bisa aku bantu untuk aplikasinya?";
-        else if (l.match(/cair|tarik|uang|wd|gopay|dana/)) reply = "Pencairan butuh 1-3 hari kerja ya Kak 😊 Ditunggu aja.";
-        else if (l.match(/minimal|min|syarat/)) reply = "Minimal penarikan saldo itu Rp 100.000 ya Kak 😊 Kumpulin dulu koinnya.";
-        else if (l.match(/kok|lama|belum|mana/)) reply = "Maaf banget ya Kak bikin nunggu 🙏 Antrean penarikan emang lagi padat banget.";
+        if(isImg) reply = "Gambarnya udah aku cek kak 😊 Kalo saldonya belum 100rb lanjut nonton dulu ya biar bisa ditarik.";
+        else if (l.match(/\b(assalamu|salam|samlekom)\b/)) reply = "Waalaikumsalam Kak 🙏 Ada yang bisa aku bantu?";
+        else if (l.match(/cair|tarik|uang|wd|gopay|dana/)) reply = "Minimal penarikan 100rb Kak, proses 1-3 hari kerja 😊.";
+        else if (l.match(/iya|oke|sip|baik|oh/)) reply = "Siap Kak! Ada lagi yang mau ditanyain?";
+        else if (l.match(/kok|lama|mana/)) reply = "Maaf banget ya Kak bikin nunggu 🙏 Antrean penarikan emang lagi padat banget.";
         else if (l.match(/gimana|cara/)) reply = "Kakak tinggal diem dan fokus nonton videonya aja, nanti koinnya nambah otomatis.";
-        else if (l.match(/\b(halo|hai|pagi|siang|malam|woi|p)\b/)) reply = `Halo Kak! Ada kendala yang bisa aku bantu?`;
-        else reply = "Oh gitu ya Kak hehe 😂 Terus gimana tuh? Btw koin di aplikasinya aman kan?";
+        else if (l.match(/gak nyambung|robot|bot|ai/)) reply = `Eh maaf kak kalau ada salah paham 🙏 Aku beneran admin kok. Ada kendala apa kak?`;
+        else reply = "Iya kak paham, untuk aplikasinya sejauh ini lancar kan nggak ada kendala?";
       }
 
-      const typingDuration = Math.min(Math.max(reply.length * 60, 4000), 18000); 
+      // Waktu ngetik realistis
+      const typingDuration = Math.min(Math.max(reply.length * 50, 3000), 12000); 
 
       setTimeout(() => {
         setCsSt("Online"); 
@@ -227,9 +209,9 @@ export function Header() {
           setTimeout(() => {
             setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply.replace(/\*/g,'') }]);
             setCsSt("Online");
-          }, Math.floor(Math.random() * 2000) + 2000); 
-        }, 1000); 
-      }, typingDuration - 3000);
+          }, Math.floor(Math.random() * 2000) + 1500); 
+        }, 800); 
+      }, typingDuration - 2000);
 
     }, readDelay);
   };
