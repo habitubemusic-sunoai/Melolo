@@ -46,7 +46,7 @@ export function Header() {
   const [chatInput, setChatInput] = useState("");
   const [chats, setChats] = useState([]);
   const [showEmoji, setShowEmoji] = useState(false);
-  const [showEndModal, setShowEndModal] = useState(false); // Modal Akhiri Chat
+  const [showEndModal, setShowEndModal] = useState(false);
   const chatRef = useRef(null);
   const fileInputRef = useRef(null);
   const idleChatTimeout = useRef(null);
@@ -69,6 +69,8 @@ export function Header() {
     const tm = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
     return `${dt} | ${tm}`;
   };
+
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     setIsMounted(true);
@@ -135,7 +137,9 @@ export function Header() {
 
   useEffect(() => { if(chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt, chatMode]);
 
-  // FUNGSI NOTIFIKASI PINTAR (POST-CHAT)
+  // ===============================================
+  // FUNGSI NOTIFIKASI PINTAR DENGAN WHATSAPP & WATERMARK
+  // ===============================================
   const sendPostChatNotif = () => {
     if(hasNotified.current) return;
     hasNotified.current = true;
@@ -143,14 +147,12 @@ export function Header() {
     const endMsgs = [
       `Terima kasih sudah menghubungi CS Habi Music Kak! 🙏 Jangan lupa lanjut nonton episode dramanya biar saldo cepat 100rb dan bisa dicairkan ya 😊`,
       `Sesi chat telah berakhir. Semangat terus kumpulin koinnya dari nonton drama ya Kak! Kalau ada kendala penarikan DANA, CS ${csInfo.name} selalu siap bantu 🙏`,
-      `Halo Kak, obrolan bantuan tadi sudah ditutup ya. Ingat, Habi Music selalu siap bantu Kakak mencairkan uang tunai dari nonton drama. Sehat selalu! ✨`,
-      `Pesan dari CS ${csInfo.name}: Terima kasih Kak! Terus nikmati tontonan drama pendek kami dan raih cuannya. Kalau butuh bantuan lagi, kami selalu ada 🙏`
+      `Pesan dari CS ${csInfo.name}: Terima kasih Kak! Terus nikmati tontonan drama pendek kami dan raih cuannya. Kalau butuh bantuan teknis, hubungi Official kami 🙏`
     ];
     const randMsg = endMsgs[Math.floor(Math.random() * endMsgs.length)];
-    setNotifs(p => [{ id: 'notif_'+Date.now(), type: 'app', time: getFullDate(), title: `Pesan CS ${csInfo.name}`, text: randMsg }, ...p]);
+    setNotifs(p => [{ id: 'notif_'+Date.now(), type: 'postchat', time: getFullDate(), title: `Pesan CS ${csInfo.name}`, text: randMsg }, ...p]);
   };
 
-  // SISTEM AUTO-PAMIT (IDLE 3 MENIT)
   useEffect(() => {
     if (chatMode === 'connected') {
       clearTimeout(idleChatTimeout.current);
@@ -210,7 +212,9 @@ export function Header() {
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
-  // OTAK AI ULTRA CANGGIH (MEMORI SUPER & PAHAM APLIKASI)
+  // ===============================================
+  // OTAK AI ULTRA JENIUS (PAHAM DETAIL APLIKASI & CEO)
+  // ===============================================
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
@@ -230,16 +234,24 @@ export function Header() {
         setCsSt("Mengetik..."); 
         
         let reply = "";
-        const lText = text.toLowerCase();
-        const isSimple = lText.match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
+        const isSimple = text.toLowerCase().match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
 
         try {
           let historyText = "";
-          chats.slice(-6).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
+          chats.slice(-8).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
 
-          let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS aplikasi "Habi Music". FAKTA PENTING APLIKASI: Habi Music adalah APLIKASI NONTON DRAMA PENDEK berhadiah uang, BUKAN APLIKASI LAGU/MUSIK. Pengguna mendapat koin uang setelah selesai nonton 1 episode. Penarikan minimal Rp 100.000 ke DANA/Gopay/ShopeePay. Sifatmu: Muslimah Jawa Timur, ramah, SANGAT SOPAN (menganggap pengguna sebagai raja/VIP), pintar, dan nyambung. Jawab MAKSIMAL 2 kalimat pendek. Pahami konteks obrolan.\n`;
+          // PROMPT CUCI OTAK TINGKAT DEWA
+          let prompt = `Instruksi Mutlak: Namamu ${csInfo.name}, CS aplikasi "Habi Music". 
+          FAKTA APLIKASI YANG WAJIB KAMU HAFAL: 
+          1. Habi Music adalah APLIKASI NONTON DRAMA PENDEK berhadiah uang, BUKAN APLIKASI MUSIK. Jika ditanya lagu, tegaskan ini tontonan drama berbayar. 
+          2. Pengguna mendapat uang Rp 10.000 setiap selesai nonton 1 episode. Penarikan minimal Rp 100.000 ke DANA/Gopay. 
+          3. CEO/Pendiri: Bapak MUHAMMAD HABI BULLAH. 
+          4. Perusahaan: Terletak di Jember, Mumbulsari, Suco, Mandigu. Server pusat di Surabaya. 
+          5. Gaji CS: Kamu dibayar gaji Rp 2,3 Juta per bulan oleh perusahaan.
+          SIFATMU: Wanita muslimah Jawa Timur, SANGAT SOPAN, memanggil pengguna dengan "Kak", anggap pengguna seperti raja. Jawab super logis dan asyik.
+          ATURAN: Jawab MAKSIMAL 2 kalimat pendek santai. Jangan pernah bilang kamu AI/Robot.\n`;
 
-          if(isImg) prompt += `[INFO: User mengirim GAMBAR SCREENSHOT. Balas: "Gambarnya sudah ${csInfo.name} terima dan cek ya kak 🙏 Kalau saldonya belum sampai 100rb, lanjut nonton dramanya dulu ya biar cepat cair 😊"]\n`;
+          if(isImg) prompt += `[INFO: User baru saja mengirim GAMBAR SCREENSHOT. Abaikan obrolan sebelumnya, langsung balas: "Gambarnya sudah ${csInfo.name} terima dan cek ya kak 🙏 Kalau saldo Kakak belum sampai 100rb, lanjut nonton dramanya dulu ya biar cepat cair 😊"]\n`;
 
           prompt += `\nRiwayat Obrolan:\n${historyText}User: "${text}"\nBalasanmu:`;
 
@@ -248,18 +260,8 @@ export function Header() {
           reply = await res.text();
 
         } catch(err) {
-          // LOGIKA CADANGAN SUPER PINTAR & SOPAN
-          if(isImg) reply = `Baik Kak, gambarnya udah ${csInfo.name} terima ya. Kalau saldonya belum 100rb, semangat nonton dramanya terus ya Kak 🙏`;
-          else if (lText.match(/mantap|keren|bagus|hebat|wah|wih|wow|gokil/)) reply = `Alhamdulillah kalau Kakak suka 🙏 Semangat terus ya Kak nonton dramanya biar koinnya makin melimpah. Ada lagi yang bisa ${csInfo.name} bantu?`;
-          else if (lText.match(/scam|bohong|tipu|masa|palsu|beneran/)) reply = `Habi Music 100% amanah dan terbukti membayar Kak 😊 Kumpulkan saldonya sampai 100rb, nanti pasti bisa ditarik langsung ke rekening Kakak.`;
-          else if (lText.match(/\b(assalamu|salam|samlekom)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu terkait aplikasinya?`;
-          else if (lText.match(/cair|tarik|uang|wd|dana|gopay|saldo/)) reply = "Penarikan saldo minimal Rp 100.000 ya Kak. Proses pencairannya 1-3 hari kerja 😊";
-          else if (lText.match(/lagu|musik|music/)) reply = `Maaf Kak meluruskan, walaupun namanya Habi Music, tapi ini sebenarnya aplikasi nonton drama lho Kak 😊 Coba deh ditonton, bisa dapat uang.`;
-          else if (lText.match(/kok|lama|belum|mana/)) reply = `Mohon maaf yang sebesar-besarnya ya Kak 🙏 Antrean penarikannya memang sedang sangat padat hari ini. Mohon ketersediaannya untuk menunggu ya Kak.`;
-          else if (lText.match(/gimana|cara/)) reply = "Sangat mudah Kak. Kakak tinggal fokus nonton episode dramanya sampai habis aja, nanti koinnya bertambah otomatis kok.";
-          else if (lText.match(/\b(halo|hai|p|ping)\b/)) reply = `Halo Kak! Aku ${csInfo.name}, ada kendala apa nih di aplikasinya?`;
-          else if (lText.match(/iya|oke|sip|baik|makasih/)) reply = `Sama-sama Kak! Senang sekali bisa melayani Kakak. Kalau ada apa-apa jangan sungkan chat lagi ya 😊`;
-          else reply = `Oh begitu ya Kak 🙏 Terus kelanjutannya gimana tuh Kak? Di aplikasinya aman kan nggak ada kendala?`;
+          // JIKA ERROR, HANYA KIRIM PESAN GANGGUAN SERVER. (Menghapus tebak-tebakan bodoh)
+          reply = `Maaf Kak, koneksi sistem CS kami sedang ada sedikit gangguan 🙏 Boleh mohon diketik ulang pertanyaannya Kak?`;
         }
 
         const baseTyping = isSimple ? 1000 : Math.min(Math.max(reply.length * 40, 2500), 7000);
@@ -323,11 +325,11 @@ export function Header() {
                       </div>
                       <div className="flex-1 overflow-y-auto bg-white p-3" ref={chatRef}>
                         {notifs.length > 0 ? notifs.map(n => (
-                          <div key={n.id} className={`flex gap-3 p-3 rounded-xl mb-3 border ${n.type==='withdraw'?'bg-blue-50 border-blue-100':'bg-white border-gray-100 shadow-sm'}`}>
+                          <div key={n.id} className={`flex gap-3 p-3 rounded-xl mb-3 border ${n.type==='withdraw'?'bg-blue-50 border-blue-100': n.type==='postchat'?'bg-green-50 border-green-100':'bg-white border-gray-100 shadow-sm'}`}>
                             
-                            {/* LOGO OFFICIAL DI DALAM NOTIFIKASI */}
-                            <div className={`w-10 h-10 rounded-full flex justify-center items-center flex-shrink-0 border shadow-sm ${n.type==='withdraw'?'bg-blue-50 border-blue-100':'bg-white border-gray-100'}`}>
-                              {n.type==='withdraw' ? <span className="text-blue-500 font-bold text-xs">Rp</span> : <div className="w-[18px] h-[12px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>}
+                            {/* LOGO OFFICIAL HABI MUSIC DI DALAM NOTIFIKASI */}
+                            <div className={`w-10 h-10 rounded-full flex justify-center items-center flex-shrink-0 border shadow-sm ${n.type==='withdraw'?'bg-blue-50 border-blue-100':n.type==='postchat'?'bg-[#25D366] border-green-200':'bg-white border-gray-100'}`}>
+                              {n.type==='withdraw' ? <span className="text-blue-500 font-bold text-xs">Rp</span> : n.type==='postchat' ? <MessageCircle className="w-5 h-5 text-white"/> : <div className="w-[18px] h-[12px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>}
                             </div>
 
                             <div className="flex-1 pr-2">
@@ -336,6 +338,22 @@ export function Header() {
                                 <span className="text-[9px] font-bold text-gray-400 mt-0.5">{n.time}</span>
                               </div>
                               <p className="text-xs text-gray-600 font-medium leading-relaxed">{n.type==='youtube'?<>{n.text.split('{link}')[0]}<a href="https://youtube.com/@habientertainmentofficial" target="_blank" className="text-[#FF0000] font-bold underline">Subscribe</a>{n.text.split('{link}')[1]}</>:n.text}</p>
+                              
+                              {/* TAMBAHAN WHATSAPP CEO & WATERMARK UNTUK POST-CHAT */}
+                              {n.type === 'postchat' && (
+                                <div className="mt-3 border-t border-green-200 pt-3">
+                                   <p className="text-[10px] text-gray-500 mb-2">Butuh bantuan manual lebih lanjut?</p>
+                                   <a href="https://wa.me/6285119821813" target="_blank" rel="noopener noreferrer" className="relative overflow-hidden inline-flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-1.5 rounded-full text-[10px] font-bold shadow-sm hover:scale-105 transition-transform">
+                                      <style dangerouslySetInnerHTML={{__html: `.shimmer-wa { position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent); transform: skewX(-20deg); animation: shimmer 2.5s infinite; } @keyframes shimmer { 100% { left: 200%; } }`}} />
+                                      <div className="shimmer-wa"></div>
+                                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.88-.653-1.473-1.46-1.646-1.757-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                      WhatsApp Official
+                                   </a>
+                                   <div className="text-[8px] text-green-600/70 font-semibold text-center mt-4 tracking-wide">
+                                      © Habi Management Official - {currentYear}
+                                   </div>
+                                </div>
+                              )}
                             </div>
                             <button onClick={()=>{if(n.id==='yt')localStorage.setItem('habi_yt_del',Date.now().toString());setNotifs(notifs.filter(x=>x.id!==n.id));}} className="text-gray-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button>
                           </div>
@@ -404,7 +422,7 @@ export function Header() {
                                 {emojis.map(e => <button type="button" key={e} onClick={() => setChatInput(p => p+e)} className="text-xl hover:scale-125 transition-transform">{e}</button>)}
                               </div>
                             )}
-                            <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm min-h-[44px]">
+                            <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm border border-gray-200 min-h-[44px]">
                               <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2 flex-shrink-0 ${showEmoji ? 'text-[#075e54]' : 'text-gray-500'}`}><Smile className="w-6 h-6"/></button>
                               <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
                               <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
@@ -416,7 +434,7 @@ export function Header() {
                           </>
                         )}
                       </div>
-                      
+
                       {/* POP-UP MODAL AKHIRI CHAT ALA TIKTOK */}
                       {showEndModal && (
                         <div className="fixed inset-0 z-[1000000] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center animate-in fade-in duration-200">
