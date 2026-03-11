@@ -28,7 +28,7 @@ export function Header() {
   const [currentTime, setCurrentTime] = useState("");
   const [userCity, setUserCity] = useState("Mendeteksi...");
 
-  // State untuk Rotasi Teks "Dapat Uang"
+  // State untuk Rotasi Teks Promo
   const promoTexts = ["🎁 Bonus", "💰 Dapat Uang", "✨ Nonton Dibayar", "💸 Klaim Hadiah"];
   const [textIndex, setTextIndex] = useState(0);
   const [fadeText, setFadeText] = useState(true);
@@ -59,13 +59,13 @@ export function Header() {
       setCurrentTime(`${dateString} | ${timeString} ${tzAbbr}`);
     }, 1000);
 
-    // 5. Rotasi Teks Promo (Ganti setiap 3 detik dengan transisi halus)
+    // 5. Rotasi Teks Promo
     const textInterval = setInterval(() => {
-      setFadeText(false); // Hilangkan teks (Fade out)
+      setFadeText(false); 
       setTimeout(() => {
         setTextIndex((prev) => (prev + 1) % promoTexts.length);
-        setFadeText(true); // Munculkan teks baru (Fade in)
-      }, 500); // Jeda setengah detik untuk transisi
+        setFadeText(true); 
+      }, 500); 
     }, 3000);
 
     return () => {
@@ -138,7 +138,7 @@ export function Header() {
                   Habi Music
                 </span>
 
-                {/* Suara Sihir (Akan bunyi sekali jika diizinkan browser) */}
+                {/* Suara Sihir (Volume 1.0 = 100% Maksimal) */}
                 {showLogo && (
                   <audio autoPlay preload="auto">
                     <source src="https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg" type="audio/ogg" />
@@ -171,7 +171,7 @@ export function Header() {
           </div>
         </div>
 
-        {/* Portal Search (Sama seperti sebelumnya, dikompres untuk ruang) */}
+        {/* Portal Search */}
         {searchOpen && typeof document !== "undefined" && createPortal(
             <div className="fixed inset-0 bg-white z-[9999] overflow-hidden">
               <div className="container mx-auto px-4 py-6 h-[100dvh] flex flex-col">
@@ -211,30 +211,30 @@ export function Header() {
           )}
       </header>
 
-      {/* === WIDGET PROMO TIKTOK STYLE === */}
-      {/* Posisi "top-[145px]" menempatkannya persis di bawah Katalog (tidak menabrak dropdown) */}
+      {/* === WIDGET PROMO TIKTOK STYLE (Warna Emas & Tengah Kiri) === */}
       {showPromo && typeof document !== "undefined" && createPortal(
-        <div className="fixed top-[150px] left-3 z-[40] transition-opacity duration-500">
+        <div className="fixed top-[40%] -translate-y-1/2 left-2 z-[40] transition-opacity duration-500">
           <div className="relative group">
             
             {/* Tombol Close */}
             <button 
               onClick={() => setShowPromo(false)}
-              className="absolute -top-1.5 -right-1.5 bg-gray-200 text-gray-600 w-4 h-4 rounded-full flex items-center justify-center z-10 hover:bg-gray-300 transition-colors shadow-sm"
+              className="absolute -top-2 -right-2 bg-gray-900 text-white w-5 h-5 rounded-full flex items-center justify-center z-10 hover:bg-black transition-colors shadow-md"
             >
-              <X className="w-2.5 h-2.5" />
+              <X className="w-3 h-3" />
             </button>
 
-            {/* Kotak Promo - Latar belakang putih pink halus (Clean White Theme) */}
+            {/* Kotak Promo Emas Terang */}
             <a 
               href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20mau%20info%20Aplikasi%20Drama%20Penghasil%20Uang!" 
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center bg-white/90 backdrop-blur-md rounded-xl p-2 shadow-[0_4px_20px_rgba(236,72,153,0.15)] border border-pink-100 transition-transform hover:scale-105 w-[75px]"
+              className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-2.5 shadow-[0_4px_15px_rgba(234,179,8,0.5)] border-2 border-yellow-200 transition-transform hover:scale-105 w-[75px]"
             >
-              {/* Teks dengan Efek Animasi Transisi Halus */}
-              <div className={`transition-opacity duration-500 flex flex-col items-center text-center ${fadeText ? 'opacity-100' : 'opacity-0'}`}>
-                <span className="text-[9px] font-extrabold text-pink-500 leading-tight">
+              <span className="text-2xl drop-shadow-md">🎁</span>
+              {/* Teks Animasi */}
+              <div className={`transition-opacity duration-500 flex flex-col items-center text-center mt-1 ${fadeText ? 'opacity-100' : 'opacity-0'}`}>
+                <span className="text-[10px] font-extrabold text-white leading-tight drop-shadow-sm">
                   {promoTexts[textIndex]}
                 </span>
               </div>
