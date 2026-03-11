@@ -24,72 +24,78 @@ export function Header() {
   const debouncedQuery = useDebounce(searchQuery, 300);
   const normalizedQuery = debouncedQuery.trim();
 
-  // State Logo & Waktu
+  // LOOPING LOGO & WAKTU (20s Logo, 30s Waktu, Berulang)
   const [showLogo, setShowLogo] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
   const [userCity, setUserCity] = useState("Indonesia");
 
-  // State Fitur Uang (25 Detik Total)
-  const [showPromo, setShowPromo] = useState(true);
-  const [isExploding, setIsExploding] = useState(false);
+  // FITUR KADO (State: 'idle' 15s -> 'exploding' 10s -> 'hidden')
+  const [promoState, setPromoState] = useState('idle'); 
   const promoTexts = ["Klaim Rp10.000", "Tarik ke DANA", "Tonton = Cuan", "Tarik GoPay"];
   const [textIndex, setTextIndex] = useState(0);
-  const [fadeText, setFadeText] = useState(true);
 
-  // State Notifikasi
   const [showNotif, setShowNotif] = useState(false);
   const [notifs, setNotifs] = useState([]);
 
   useEffect(() => {
-    setIsMounted(true); // Matikan error Hydration Vercel
+    setIsMounted(true); 
 
-    // Timer Logo 20 Detik
-    const logoTimer = setTimeout(() => setShowLogo(false), 20000);
+    // LOGIKA LOOPING LOGO/WAKTU
+    let loopTimer;
+    const runLoop = (isLogoView) => {
+      setShowLogo(isLogoView);
+      loopTimer = setTimeout(() => runLoop(!isLogoView), isLogoView ? 20000 : 30000);
+    };
+    runLoop(true); // Mulai dengan logo 20 detik
 
-    // Timer Uang (15 detik diam + 10 detik meledak)
-    const explodeTimer = setTimeout(() => {
-      setIsExploding(true);
-      setTimeout(() => setShowPromo(false), 10000);
+    // LOGIKA KADO 25 DETIK
+    const t1 = setTimeout(() => {
+      setPromoState('exploding');
+      setTimeout(() => setPromoState('hidden'), 10000); // Hujan 10 detik lalu hilang
     }, 15000);
 
-    // Rotasi Teks Kado
     const textInterval = setInterval(() => {
-      setFadeText(false); 
-      setTimeout(() => { setTextIndex(p => (p + 1) % promoTexts.length); setFadeText(true); }, 500); 
-    }, 3000);
+      setTextIndex(p => (p + 1) % promoTexts.length);
+    }, 2500);
 
-    // Lacak Lokasi IP (Sederhana & Anti Error)
+    // Lacak IP
     fetch('https://get.geojs.io/v1/ip/geo.json')
       .then(res => res.json())
       .then(data => setUserCity(data.city || "Indonesia"))
       .catch(() => setUserCity("Indonesia"));
 
-    // Jam Real-time
+    // Jam
     const clockInterval = setInterval(() => {
       const d = new Date();
       const offset = -d.getTimezoneOffset() / 60;
-      setCurrentTime(`${d.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })} | ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ${offset === 8 ? "WITA" : offset === 9 ? "WIT" : "WIB"}`);
+      setCurrentTime(`${d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })} | ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} ${offset === 8 ? "WITA" : offset === 9 ? "WIT" : "WIB"}`);
     }, 1000);
 
-    // Notifikasi Pintar
-    const now = new Date();
+    // Notif Pintar
     const active = [];
     const ytDel = localStorage.getItem('habi_yt_del');
-    if (!ytDel || (now.getTime() - parseInt(ytDel)) / 3600000 >= 3) {
+    if (!ytDel || (new Date().getTime() - parseInt(ytDel)) / 3600000 >= 3) {
       active.push({ id: 'yt', type: 'youtube', time: 'Baru saja', text: "Dukung karya kami dengan {link} channel resmi kami." });
     }
-    if (localStorage.getItem('habi_app_del') !== now.toLocaleDateString('id-ID')) {
-      active.push({ id: 'app', type: 'app', time: `${now.toLocaleDateString('id-ID')} | ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`, text: "Event nonton dapat uang sedang berlangsung! Kumpulkan cuannya." });
+    if (localStorage.getItem('habi_app_del') !== new Date().toLocaleDateString('id-ID')) {
+      active.push({ id: 'app', type: 'app', time: `${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`, text: "Sistem koin otomatis aktif! Tonton drama dan kumpulkan cuannya." });
     }
     setNotifs(active);
 
-    return () => { clearTimeout(logoTimer); clearTimeout(explodeTimer); clearInterval(clockInterval); clearInterval(textInterval); };
+    return () => { clearTimeout(loopTimer); clearTimeout(t1); clearInterval(clockInterval); clearInterval(textInterval); };
   }, []);
 
   const deleteNotif = (id) => {
     if (id === 'yt') localStorage.setItem('habi_yt_del', new Date().getTime().toString());
     else localStorage.setItem('habi_app_del', new Date().toLocaleDateString('id-ID'));
     setNotifs(notifs.filter(n => n.id !== id));
+  };
+
+  // AKSI ILUSI JIKA KADO DIKLIK
+  const handleKadoClick = (e) => {
+    e.preventDefault();
+    setPromoState('hidden'); // Sembunyikan kado
+    alert("✨ SISTEM KOIN DIAKTIFKAN!\n\nPersentase uang akan berjalan otomatis saat video diputar. Tonton sampai habis untuk mendapatkan Rp 10.000.\n\nCek menu 'Cairkan Dana' di layar utama untuk menarik saldo Anda!");
   };
 
   const { isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFlickReels, isFreeReels, platformInfo } = usePlatform();
@@ -101,7 +107,7 @@ export function Header() {
   const { data: frRes } = useFlickReelsSearch(isFlickReels ? normalizedQuery : "");
   const { data: freRes } = useFreeReelsSearch(isFreeReels ? normalizedQuery : "");
 
-  const isSearching = isDramaBox ? false : false; // Dummy loading
+  const isSearching = isDramaBox ? false : false; 
   const rawResults = (isDramaBox ? dbRes : isReelShort ? rsRes?.data : isShortMax ? smRes?.data : isNetShort ? nsRes?.data : isMelolo ? mlRes?.data?.search_data?.flatMap(i => i.books || []).filter(b => b.thumb_url) : isFlickReels ? frRes?.data : freRes) || [];
 
   const getMap = (item) => {
@@ -116,7 +122,7 @@ export function Header() {
   };
 
   if (pathname?.startsWith("/watch")) return null;
-  if (!isMounted) return null; // Cegah error Vercel
+  if (!isMounted) return null;
 
   return (
     <>
@@ -125,7 +131,6 @@ export function Header() {
           <div className="flex items-center justify-between h-14">
             
             <a href="https://www.youtube.com/@habientertainmentofficial" target="_blank" rel="noopener noreferrer" className="relative flex-1 h-10 flex items-center overflow-hidden group">
-              {/* Logo YouTube Style */}
               <div className={`absolute left-0 transition-all duration-700 flex items-center gap-1 ${showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6 pointer-events-none'}`}>
                 {showLogo && <style dangerouslySetInnerHTML={{__html: `.kilau { position: absolute; top: 0; left: -150%; width: 150%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent); transform: skewX(-25deg); animation: k 1.8s ease-in-out 0.2s forwards; z-index: 20; pointer-events: none; } @keyframes k { 0% { left: -150%; } 100% { left: 150%; } }`}} />}
                 <div className="kilau"></div>
@@ -134,14 +139,12 @@ export function Header() {
                 {showLogo && <audio autoPlay preload="auto"><source src="https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg" type="audio/ogg" /></audio>}
               </div>
 
-              {/* Jam & Kota */}
               <div className={`absolute left-0 transition-all duration-700 flex flex-col justify-center ${!showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'}`}>
                 <div className="flex items-center gap-1 text-gray-800 font-bold text-[11px] sm:text-xs"><MapPin className="w-3.5 h-3.5 text-[#FF0000]" /><span>{userCity}</span></div>
                 <div className="text-gray-500 font-mono text-[10px] ml-4">{currentTime}</div>
               </div>
             </a>
 
-            {/* Lonceng Notif & Pencarian */}
             <div className="flex items-center gap-1">
               <div className="relative">
                 <button onClick={() => setShowNotif(!showNotif)} className="p-2 rounded-full hover:bg-gray-100 relative">
@@ -173,7 +176,7 @@ export function Header() {
           </div>
         </div>
 
-        {/* Portal Pencarian */}
+        {/* Search Modal */}
         {searchOpen && createPortal(
           <div className="fixed inset-0 bg-white z-[9999] overflow-hidden flex flex-col px-4 py-6">
             <div className="flex items-center gap-4 mb-6">
@@ -195,7 +198,7 @@ export function Header() {
         )}
       </header>
 
-      {/* ANIMASI UANG HUJAN */}
+      {/* ANIMASI UANG & EFEK KADO */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes ex { 0% { transform: scale(1); opacity: 1; } 10% { transform: scale(1.4) rotate(10deg); opacity: 1; filter: brightness(1.2); } 100% { transform: scale(0); opacity: 0; } }
         @keyframes f1 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(-40px, 150px) scale(1) rotate(-45deg); opacity: 0; } }
@@ -204,18 +207,20 @@ export function Header() {
         @keyframes f4 { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 100% { transform: translate(-20px, 150px) scale(1) rotate(-90deg); opacity: 0; } }
         .ea { animation: ex 0.5s ease-in forwards; }
         .rp { position: absolute; top: 30%; left: 30%; font-weight: bold; pointer-events: none; opacity: 0; text-shadow: 0px 2px 4px rgba(0,0,0,0.5); }
-        .p1 { animation: f1 10s ease-out forwards; animation-delay: 0s; color: #16a34a; } 
-        .p2 { animation: f2 10s ease-out forwards; animation-delay: 0.1s; color: #eab308; } 
-        .p3 { animation: f3 10s ease-out forwards; animation-delay: 0.2s; } 
-        .p4 { animation: f4 10s ease-out forwards; animation-delay: 0.3s; } 
+        .p1 { animation: f1 10s ease-out forwards; animation-delay: 0s; color: #16a34a; } .p2 { animation: f2 10s ease-out forwards; animation-delay: 0.1s; color: #eab308; } .p3 { animation: f3 10s ease-out forwards; animation-delay: 0.2s; } .p4 { animation: f4 10s ease-out forwards; animation-delay: 0.3s; } 
+        
+        .kado-text-shadow {
+           text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 0px 4px 6px rgba(0,0,0,0.8);
+        }
       `}} />
 
-      {/* WIDGET KADO (Posisi Area "62 Ep" Kiri Bawah) */}
-      {showPromo && createPortal(
-        <div className="fixed top-[320px] left-6 z-[40]">
-          <div className="relative group flex flex-col items-center">
-            <div className={`relative ${isExploding ? 'ea' : ''}`}>
-              {isExploding && (
+      {/* WIDGET KADO (Sembunyi jika state hidden) */}
+      {promoState !== 'hidden' && createPortal(
+        <div className="fixed top-[280px] left-6 z-[40]">
+          <div className="relative flex flex-col items-center">
+            <div className={`relative flex flex-col items-center justify-center ${promoState === 'exploding' ? 'ea' : ''}`}>
+              
+              {promoState === 'exploding' && (
                 <>
                   <div className="rp p1 text-[14px]">Rp 50K</div>
                   <div className="rp p2 text-[16px]">Rp 100K</div>
@@ -223,15 +228,17 @@ export function Header() {
                   <div className="rp p4 text-[18px]">🪙</div>
                 </>
               )}
-              {!isExploding && (
-                <a href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20mau%20cairkan%20dana%20nonton!" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center transition-transform hover:scale-110">
-                  <span className="text-[28px] drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">🎁</span>
-                  <div className={`transition-opacity duration-500 mt-0.5 ${fadeText ? 'opacity-100' : 'opacity-0'}`}>
-                    <span className="text-[10px] font-black text-white tracking-wider" style={{ textShadow: "1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0px 3px 5px rgba(0,0,0,0.9)" }}>
+              
+              {promoState === 'idle' && (
+                <button onClick={handleKadoClick} className="flex flex-col items-center justify-center transition-transform hover:scale-110 active:scale-95 outline-none">
+                  {/* Teks dipepetkan ke atas (mt-[-8px]) dan tanpa background kotak */}
+                  <span className="text-[32px] drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] relative z-10">🎁</span>
+                  <div className="mt-[-6px] relative z-20 transition-opacity duration-300">
+                    <span className="text-[11px] font-black text-white tracking-widest uppercase kado-text-shadow">
                       {promoTexts[textIndex]}
                     </span>
                   </div>
-                </a>
+                </button>
               )}
             </div>
           </div>
