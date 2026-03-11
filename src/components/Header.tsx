@@ -148,11 +148,10 @@ export function Header() {
     if(!file) return;
     const url = URL.createObjectURL(file);
     const b64 = await getBase64(file);
-    sendChatCore("Tolong analisis screenshot ini ya Kak", true, url, b64, file.type);
+    sendChatCore("Tolong bantu analisis screenshot ini ya Kak", true, url, b64, file.type);
   };
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null, null, null); setShowEmoji(false); };
-
   const sendChatCore = async (text, isImg=false, imgUrl=null, base64=null, mimeType=null) => {
     if(!isImg && !text.trim()) return;
     if(chatMode !== 'connected') return;
@@ -170,16 +169,14 @@ export function Header() {
       
       let reply = "";
       try {
-        // Ambil riwayat chat agar AI PUNYA INGATAN!
         const chatHistory = chats.map(c => ({ sender: c.sender, text: c.text }));
         
         const payload = {
             history: chatHistory,
-            message: `(Kamu adalah CS Habi Music, wanita ramah. Jawab maksimal 2 kalimat santai) ${text}`,
+            message: `Instruksi Sistem: Kamu adalah CS Habi Music (nonton video dapat saldo). Kamu cewek asli Jawa Timur. Ramah, santai, logis, agak gaul. Jawab maksimal 2 kalimat saja. Jika dia nanya diluar konteks, jawab nyambung tapi arahkan ke aplikasi.\n\nPesan User: ${text}`,
             image: isImg && base64 ? { base64, mimeType } : null
         };
 
-        // Panggil OTAK RAHASIA BACKEND yang tadi kita buat
         const res = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -189,17 +186,17 @@ export function Header() {
         const data = await res.json();
         reply = data.reply;
       } catch(err) {
-        reply = "Aduh maaf Kak, sistem aku lagi gangguan sebentar 🙏 Bisa diulangi pertanyaannya?";
+        reply = "Aduh maaf Kak, jaringan sistem aku lagi padet nih 🙏 Bisa diulangi pertanyaannya?";
       }
 
       const typingDuration = Math.min(Math.max(reply.length * 60, 4000), 18000); 
 
       setTimeout(() => {
-        setCsSt("Online"); // Berhenti ngetik (mikir)
+        setCsSt("Online"); 
         setTimeout(() => {
-          setCsSt("Mengetik..."); // Ngetik lagi (Realistis)
+          setCsSt("Mengetik..."); 
           setTimeout(() => {
-            setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply.replace(/\*/g, '') }]);
+            setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply }]);
             setCsSt("Online");
           }, Math.floor(Math.random() * 2000) + 2000); 
         }, 1000); 
@@ -272,6 +269,7 @@ export function Header() {
                       <div className="flex items-center p-3 bg-[#008069] text-white shadow-md z-10">
                         <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
                         
+                        {/* FOTO PROFIL LOGO HABI MUSIC */}
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer shadow-sm">
                            <div className="w-[20px] h-[14px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>
                         </div>
