@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft, User } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -25,6 +25,7 @@ export function Header() {
   const [showLogo, setShowLogo] = useState(true);
   const [userCity, setUserCity] = useState("Mencari Lokasi...");
   const [currentTime, setCurrentTime] = useState("");
+  
   const [balance, setBalance] = useState(0); 
   const [promoState, setPromoState] = useState('idle'); 
   const pTexts = ["Klaim Rp 10.000", "Nonton Dibayar", "Tarik Saldo", "Bonus Cuan!"];
@@ -35,8 +36,14 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  const csNames = ["Tasya", "Felicia", "Ayu", "Nadia", "Siska", "Putri"];
-  const [csName, setCsName] = useState("");
+  // Data CS Profil Wanita Asli (Random API)
+  const csData = [
+    { name: "Tasya", img: "https://randomuser.me/api/portraits/women/44.jpg" },
+    { name: "Ayu", img: "https://randomuser.me/api/portraits/women/31.jpg" },
+    { name: "Felicia", img: "https://randomuser.me/api/portraits/women/68.jpg" },
+    { name: "Nadia", img: "https://randomuser.me/api/portraits/women/22.jpg" }
+  ];
+  const [csInfo, setCsInfo] = useState({ name: "CS", img: "" });
   const [csSt, setCsSt] = useState("Online");
   const [showNotif, setShowNotif] = useState(false);
   const [notifs, setNotifs] = useState([]);
@@ -45,6 +52,7 @@ export function Header() {
   const [chats, setChats] = useState([]);
   const chatRef = useRef(null);
 
+  // Hook Fetching Data
   const { isDramaBox, isReelShort, isShortMax, isNetShort, isMelolo, isFlickReels, isFreeReels, platformInfo } = usePlatform();
   const dbRes = useSearchDramas(isDramaBox ? nQuery : "");
   const rsRes = useReelShortSearch(isReelShort ? nQuery : "");
@@ -56,7 +64,9 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
-    setCsName("CS - " + csNames[Math.floor(Math.random() * csNames.length)]);
+    const randomCS = csData[Math.floor(Math.random() * csData.length)];
+    setCsInfo(randomCS);
+    
     const sBal = localStorage.getItem('habi_balance');
     if (sBal) setBalance(Number(sBal));
 
@@ -84,17 +94,18 @@ export function Header() {
     }, 1000);
 
     const aN = [];
-    const tS = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+    const dateStr = new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'short', year:'numeric'});
+    const timeStr = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
     if (!localStorage.getItem('habi_yt_del')) {
-      aN.push({ id:'yt', type:'youtube', time:tS, title:'Admin Habi', text:'Dukung karya kami dengan {link} channel resmi kami.' });
+      aN.push({ id:'yt', type:'youtube', time:`${dateStr} ${timeStr}`, title:'Admin Habi', text:'Dukung karya kami dengan {link} channel resmi kami.' });
     }
     setNotifs(aN);
-    setChats([{ id:'c1', sender:'admin', time:tS, text:`Halo Kak! Saya CS dari tim Habi Music. Ada yang bisa dibantu hari ini? 😊` }]);
+    setChats([{ id:'c1', sender:'admin', time:timeStr, text:`Halo Kak! Aku ${randomCS.name} dari tim CS Habi Music. Ada yang mau ditanyain hari ini? 😊` }]);
 
     const handleWd = (e) => {
       const d = e.detail;
-      const tm = new Date(d.timestamp).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-      setNotifs(p => [{ id:'wd_'+d.id, type:'withdraw', time:tm, title:'Finance', text:`💳 PENDING: Rp100K ke ${d.method} (${d.account}) sedang diproses.` }, ...p]);
+      const t = new Date(d.timestamp).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+      setNotifs(p => [{ id:'wd_'+d.id, type:'withdraw', time:`${dateStr} ${t}`, title:'Finance Habi', text:`💳 PENDING: Rp100.000 ke ${d.method} (${d.account}) sedang diproses dlm 1-3 hari kerja.` }, ...p]);
     };
     window.addEventListener('habi_withdraw_event', handleWd);
 
@@ -127,8 +138,18 @@ export function Header() {
     return () => { clearInterval(cT); clearTimeout(tT); };
   }, [promoState, isWatching, isIdle]);
 
-  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen]);
+  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt]);
 
+  const delN = (id) => {
+    if (id === 'yt') localStorage.setItem('habi_yt_del', Date.now().toString());
+    setNotifs(notifs.filter(n => n.id !== id));
+  };
+
+  const actBerhenti = () => { setShowCoinMenu(false); setPromoState('hidden'); alert("Sistem uang dijeda. Saldo aman."); };
+  
+  // ==========================================
+  // OTAK AI CUSTOMER SERVICE (SUPER PINTAR)
+  // ==========================================
   const sendChat = (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
@@ -139,27 +160,62 @@ export function Header() {
     setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:userMsg, status:'sent' }]);
     setChatInput("");
 
-    const readDelay = Math.floor(Math.random() * 2000) + 1000; 
-    const replyDelay = Math.floor(Math.random() * 15000) + 5000; 
+    // Waktu Jeda Relistis Manusia
+    const readDelay = Math.floor(Math.random() * 3000) + 1000; // Baca dalam 1-4 detik
+    const typingDuration = Math.floor(Math.random() * 15000) + 5000; // Ngetik dalam 5-20 detik
 
     setTimeout(() => {
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
-      setCsSt("Mengetik...");
+      setCsSt("Mengetik..."); // Mulai Ngetik
+      
       setTimeout(() => {
         const l = userMsg.toLowerCase();
-        let reply = "Baik Kak, pesan sudah kami terima. Tim teknis akan segera mengeceknya ya 🙏";
-        if (l.match(/cair|tarik|uang/)) reply = "Proses pencairan dana biasanya memakan waktu 1-3 hari kerja Kak. Ditunggu ya 😊";
-        else if (l.match(/kok|lama|belum/)) reply = "Maaf banget Kak bikin nunggu 🙏 antrean penarikan hari ini sedang padat, pasti cair kok!";
-        else if (l.match(/gimana|cara/)) reply = "Gampang Kak, diam dan fokus nonton videonya aja, koin akan nambah otomatis.";
-        else if (l.match(/halo|hai/)) reply = `Halo Kak! Ada yang bisa dibantu?`;
+        let reply = "";
         
+        // Logika Pintar
+        if (l.match(/cair|tarik|uang|wd|gopay|dana/)) {
+            const arr = ["Prosesnya 1-3 hari kerja ya Kak 😊", "Tunggu sebentar ya Kak, estimasinya 1-3 hari masuk ke rekening.", "Lagi diproses sama tim finance Kak, maksimal 3 harian."];
+            reply = arr[Math.floor(Math.random() * arr.length)];
+        } else if (l.match(/kok|lama|belum|mana/)) {
+            const arr = ["Maaf banget ya Kak 🙏 antreannya emang lagi panjang hari ini.", "Duh maaf bikin nunggu Kak, ini lagi aku push ke tim terkait kok.", "Iya Kak maaf ya, sabar dikit lagi pasti cair kok!"];
+            reply = arr[Math.floor(Math.random() * arr.length)];
+        } else if (l.match(/gimana|cara/)) {
+            reply = "Gampang banget Kak, diem dan fokus nonton videonya aja tanpa discroll, koinnya nambah sendiri kok hehe.";
+        } else if (l.match(/bohong|tipu|scam|hoax/)) {
+            reply = "Beneran cair kok Kak 😊 Aman 100% asalkan nggak pakai aplikasi bot/curang ya.";
+        } else if (l.match(/halo|hai|pagi|siang|p|woi/)) {
+            reply = `Halo juga Kak! Aku ${csInfo.name}, ada yang bisa dibantu?`;
+        } else if (l.match(/lagi apa|sibuk/)) {
+            reply = "Lagi jawabin chat Kakak nih hehe 😊 Btw ada kendala soal aplikasi?";
+        } else if (l.match(/bot|robot|mesin/)) {
+            reply = `Enak aja, aku orang asli tau Kak 😂 dari Jawa Timur nih. Ada yang mau ditanyain kah?`;
+        } else if (l.match(/cantik/)) {
+            reply = "Aduh makasih Kak pujiannya 🙈 hehe. Btw soal penarikan uangnya aman kan?";
+        } else if (l.match(/makan/)) {
+            reply = "Udah dong Kak. Kakak sendiri jangan lupa makan ya. Aplikasinya sejauh ini lancar?";
+        } else if (l.match(/bener|masa|serius/)) {
+            reply = "Iya beneran dong Kak 😊 Cobain aja kumpulin sampai 100rb terus ditarik.";
+        } else if (l.match(/makasih|thanks|oke|baik/)) {
+            reply = "Sama-sama Kak! Senang bisa bantu. Kalau ada apa-apa chat aku lagi ya 😊";
+        } else {
+            // Jawaban ngeles kalau ditanya hal random
+            const arr = [
+                "Ohh gitu ya Kak.. Hmm, terus kelanjutannya gimana tuh?",
+                "Walahh, iya paham Kak. Btw aplikasinya sejauh ini lancar aja kan?",
+                "Hehe bisa aja nih Kakak. Ada kendala lain seputar koinnya gak?",
+                "Menarik juga ya Kak obrolannya hehe. Tapi kalau untuk penarikan dana aman ya?",
+                "Iya bener banget Kak. Btw maaf ya kalau tadi balasnya agak lama, lagi banyak chat masuk 😅"
+            ];
+            reply = arr[Math.floor(Math.random() * arr.length)];
+        }
+
         setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply }]);
-        setCsSt("Online");
-      }, replyDelay);
+        setCsSt("Online"); // Selesai ngetik
+      }, typingDuration);
     }, readDelay);
   };
-
   const rawR = (isDramaBox ? dbRes.data : isReelShort ? rsRes?.data?.data : isShortMax ? smRes?.data?.data : isNetShort ? nsRes?.data?.data : isMelolo ? mlRes?.data?.data?.search_data?.flatMap(i=>i.books||[]).filter(b=>b.thumb_url) : isFlickReels ? frRes?.data?.data : freRes.data) || [];
+  
   const getMap = (i) => {
     if(isDramaBox) return {l:`/detail/dramabox/${i.bookId}`, c:i.cover, t:i.bookName};
     if(isReelShort) return {l:`/detail/reelshort/${i.book_id}`, c:i.book_pic, t:i.book_title};
@@ -171,6 +227,7 @@ export function Header() {
   };
 
   if(!isMounted || pathname?.startsWith("/watch")) return null;
+
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -211,35 +268,50 @@ export function Header() {
                               <div className="flex justify-between items-start mb-1"><span className="font-bold text-xs text-gray-900">{n.title}</span><span className="text-[10px] font-bold text-gray-400">{n.time}</span></div>
                               <p className="text-xs text-gray-600 font-medium leading-relaxed">{n.type==='youtube'?<>{n.text.split('{link}')[0]}<a href="https://youtube.com/@habientertainmentofficial" target="_blank" className="text-[#FF0000] font-bold underline">Subscribe</a>{n.text.split('{link}')[1]}</>:n.text}</p>
                             </div>
-                            <button onClick={()=>{if(n.id==='yt')localStorage.setItem('habi_yt_del',Date.now().toString());setNotifs(notifs.filter(x=>x.id!==n.id));}} className="text-gray-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button>
+                            <button onClick={()=>delN(n.id)} className="text-gray-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button>
                           </div>
                         )) : <div className="py-10 text-center text-gray-400 text-sm font-medium">Belum ada notifikasi.</div>}
                       </div>
                     </>
                   ) : (
                     <>
+                      {/* HEADER CHAT WHATSAPP STYLE */}
                       <div className="flex items-center gap-3 p-3 bg-[#075e54] text-white">
                         <button onClick={()=>setChatOpen(false)} className="p-1 rounded-full hover:bg-white/20"><ArrowLeft className="w-6 h-6"/></button>
-                        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"><User className="w-6 h-6 text-white"/></div>
-                        <div className="flex flex-col"><span className="font-bold text-base leading-tight">{csName}</span><span className="text-[11px] opacity-90">{csSt}</span></div>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+                          {csInfo.img ? <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-white"/>}
+                        </div>
+                        <div className="flex flex-col"><span className="font-bold text-base leading-tight">CS - {csInfo.name}</span><span className="text-[11px] font-medium opacity-90">{csSt}</span></div>
                       </div>
-                      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{backgroundColor:'#e5ddd5'}} ref={chatRef}>
-                        <div className="text-center text-[10px] text-gray-500 font-medium my-2 bg-black/5 self-center px-3 py-1 rounded-md">Hari ini</div>
+                      
+                      {/* BODY CHAT */}
+                      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{backgroundColor:'#e5ddd5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
+                        <div className="text-center text-[10px] text-gray-600 font-bold my-2 bg-white/60 backdrop-blur-sm self-center px-3 py-1 rounded-md shadow-sm">Hari ini</div>
                         {chats.map(c => (
                           <div key={c.id} className={`flex flex-col max-w-[85%] ${c.sender === 'user' ? 'self-end' : 'self-start'}`}>
                             <div className={`p-2.5 rounded-lg text-sm shadow-sm relative ${c.sender === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
                               <p className="text-gray-800 break-words pr-2">{c.text}</p>
                               <div className="flex items-center justify-end gap-1 mt-1 -mb-1 -mr-1">
-                                <span className="text-[9px] text-gray-500">{c.time}</span>
+                                <span className="text-[9px] text-gray-500 font-medium">{c.time}</span>
                                 {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-blue-500"/> : <Check className="w-4 h-4 text-gray-400"/>)}
                               </div>
                             </div>
                           </div>
                         ))}
+                        {/* Indikator Ngetik Palsu di dalam Chat */}
+                        {csSt === "Mengetik..." && (
+                           <div className="self-start bg-white p-3 rounded-lg rounded-tl-none shadow-sm flex items-center gap-1.5 mt-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "0ms"}}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "150ms"}}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "300ms"}}></div>
+                           </div>
+                        )}
                       </div>
+
+                      {/* INPUT CHAT */}
                       <form onSubmit={sendChat} className="p-2 bg-[#f0f0f0] flex gap-2 items-center">
                         <input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} placeholder="Ketik pesan..." className="flex-1 bg-white rounded-full px-4 py-3 text-sm outline-none shadow-sm"/>
-                        <button type="submit" className="bg-[#00a884] text-white p-3 rounded-full shadow-sm hover:bg-[#008f6f]"><Send className="w-5 h-5"/></button>
+                        <button type="submit" className="bg-[#00a884] text-white p-3 rounded-full shadow-sm hover:bg-[#008f6f]"><Send className="w-5 h-5 ml-0.5"/></button>
                       </form>
                     </>
                   )}
@@ -276,7 +348,7 @@ export function Header() {
       )}
 
       {showCoinMenu && createPortal(
-        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Pengaturan Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);setPromoState('hidden');alert("Sistem uang dijeda. Saldo aman.");}} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
+        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Menu Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={actBerhenti} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
       )}
     </>
   );
