@@ -2,15 +2,21 @@
 "use client";
 
 import Image from "next/image";
-import { usePlatform, type PlatformInfo } from "@/hooks/usePlatform";
+import { usePlatform } from "@/hooks/usePlatform";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, CheckCircle2 } from "lucide-react";
+import { X, Wallet, ArrowRight } from "lucide-react";
 
 export function PlatformSelector() {
   const { currentPlatform, setPlatform, platforms } = usePlatform();
   const [walletIndex, setWalletIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mencegah layar Blank Putih di Vercel (Hydration Fix)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const wallets = [
     { name: "Uang", icon: "💸", color: "bg-green-500" },
@@ -54,58 +60,53 @@ export function PlatformSelector() {
         ))}
       </div>
 
-      {/* POPUP MODAL ALA TIKTOK BONUS */}
-      {showModal && typeof document !== "undefined" && createPortal(
+      {/* POPUP MODAL ALA TIKTOK BONUS (Hanya render jika halaman sudah siap) */}
+      {isMounted && showModal && createPortal(
         <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center animate-in fade-in duration-300">
           <div className="bg-white w-full sm:w-[400px] h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0">
             
             {/* Header Modal */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div className="w-8"></div>
-              <h2 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-                <span className="text-2xl">🎁</span> Habi Bonus
-              </h2>
+              <h2 className="font-bold text-lg text-gray-900">Tarik Saldo</h2>
               <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5 text-gray-600" /></button>
             </div>
 
             <div className="p-5 overflow-y-auto flex-1 bg-gray-50">
               {/* Kartu Saldo */}
-              <div className="bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden mb-6">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                <p className="text-sm font-medium opacity-90 mb-1">Saldo Anda (Poin Berjalan)</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black tracking-tight">Rp 10.000</span>
-                  <span className="text-sm font-medium opacity-80">,00</span>
-                </div>
-                <a href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20sudah%20nonton%20dan%20ingin%20Tarik%20Uang%20ke%20DANA/GoPay!" target="_blank" rel="noopener noreferrer" className="mt-4 w-full bg-white text-red-600 font-bold py-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
-                  Tarik Uang Sekarang
-                </a>
+              <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100 mb-6">
+                <p className="text-sm font-medium text-gray-500 mb-2">Poin Anda (Rp)</p>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">10.000</h1>
               </div>
 
-              <h3 className="font-bold text-gray-800 mb-3 px-1">Tugas Harian</h3>
-              
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"><Play className="w-6 h-6 text-green-600 fill-green-600 ml-1" /></div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-sm text-gray-900">Nonton Drama 1 Episode</h4>
-                  <p className="text-[11px] text-gray-500 leading-tight mt-1">Sistem koin berjalan otomatis saat video diputar sampai selesai.</p>
+              {/* Form Ilusi (Demo) */}
+              <h3 className="font-bold text-gray-800 mb-3 px-1 text-sm">Metode Penarikan</h3>
+              <div className="bg-white rounded-2xl p-2 shadow-sm border border-gray-100 mb-6">
+                <div className="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer hover:bg-gray-50 rounded-t-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">Rp</div>
+                    <span className="font-medium text-gray-800 text-sm">DANA</span>
+                  </div>
+                  <div className="w-4 h-4 rounded-full border-4 border-red-500 bg-white"></div>
                 </div>
-                <div className="text-right">
-                  <span className="block text-red-500 font-bold text-sm">+Rp 10K</span>
-                  <button className="mt-1 bg-red-50 text-red-600 text-[10px] font-bold px-3 py-1 rounded-full">Mulai</button>
+                <div className="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 rounded-b-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold text-xs">S</div>
+                    <span className="font-medium text-gray-800 text-sm">ShopeePay</span>
+                  </div>
+                  <div className="w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 opacity-70">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"><CheckCircle2 className="w-6 h-6 text-blue-600" /></div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-sm text-gray-900">Check-in Harian</h4>
-                  <p className="text-[11px] text-gray-500 leading-tight mt-1">Buka aplikasi berturut-turut.</p>
-                </div>
-                <div className="text-right">
-                  <span className="block text-gray-400 font-bold text-sm">Selesai</span>
-                </div>
+              <h3 className="font-bold text-gray-800 mb-3 px-1 text-sm">Detail Akun (Demo)</h3>
+              <div className="mb-6">
+                <input type="number" placeholder="Masukkan Nomor HP terdaftar..." className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all" />
               </div>
+
+              {/* Tombol Asli Menuju WA */}
+              <a href="https://wa.me/6285119821813?text=Halo%20Admin,%20saya%20mau%20Cairkan%20Dana%20dari%20nonton%20drama!" target="_blank" rel="noopener noreferrer" className="w-full bg-[#FF0000] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-red-600 transition-colors shadow-md">
+                Tarik Uang Sekarang <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </div>, document.body
