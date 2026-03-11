@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, MoreVertical, Phone, Video, Paperclip, Camera, Smile } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft, User, Clock, Paperclip, Camera, Smile } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -15,6 +15,9 @@ import { usePlatform } from "@/hooks/usePlatform";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePathname } from "next/navigation";
 
+// KUNCI API GOOGLE GEMINI GRATIS MILIKMU
+const GEMINI_API_KEY = "AIzaSyCCOvMHfgZbEn03Ovj8zjb9lqbyaaiyf4w";
+
 export function Header() {
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
@@ -25,7 +28,6 @@ export function Header() {
   const [showLogo, setShowLogo] = useState(true);
   const [userCity, setUserCity] = useState("Mencari Lokasi...");
   const [currentTime, setCurrentTime] = useState("");
-  
   const [balance, setBalance] = useState(0); 
   const [promoState, setPromoState] = useState('idle'); 
   const pTexts = ["Klaim Rp 10.000", "Nonton Dibayar", "Tarik Saldo", "Bonus Cuan!"];
@@ -36,16 +38,16 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  // Data Profil CS Cewek Indonesia Berhijab (Pexels/Unsplash Asia)
+  // CS Data Wanita Jatim Asli Berhijab
   const csData = [
-    { name: "Tasya", img: "https://images.pexels.com/photos/8101511/pexels-photo-8101511.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
-    { name: "Ayu", img: "https://images.pexels.com/photos/5119214/pexels-photo-5119214.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
-    { name: "Nisa", img: "https://images.pexels.com/photos/6105315/pexels-photo-6105315.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" }
+    { name: "Nisa", img: "https://images.pexels.com/photos/8101511/pexels-photo-8101511.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
+    { name: "Wulan", img: "https://images.pexels.com/photos/5119214/pexels-photo-5119214.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
+    { name: "Rini", img: "https://images.pexels.com/photos/6105315/pexels-photo-6105315.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
+    { name: "Sari", img: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=150&h=150&fit=crop" }
   ];
   const [csInfo, setCsInfo] = useState({ name: "CS", img: "" });
   const [csSt, setCsSt] = useState("Online");
   const [chatMode, setChatMode] = useState('idle'); 
-  
   const [showNotif, setShowNotif] = useState(false);
   const [notifs, setNotifs] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
@@ -65,29 +67,26 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
-    setCsInfo(csData[Math.floor(Math.random() * csData.length)]);
+    const randCS = csData[Math.floor(Math.random() * csData.length)];
+    setCsInfo(randCS);
     
     const sBal = localStorage.getItem('habi_balance');
-    if (sBal) setBalance(Number(sBal));
+    if(sBal) setBalance(Number(sBal));
 
     let lTimer;
     const runL = (isL) => { setShowLogo(isL); lTimer = setTimeout(() => runL(!isL), isL ? 20000 : 30000); };
     runL(true);
 
     let eT;
-    if (promoState === 'idle') {
-      eT = setTimeout(() => { setPromoState('exploding'); setTimeout(() => setPromoState('hidden'), 10000); }, 15000);
-    }
+    if(promoState === 'idle') { eT = setTimeout(() => { setPromoState('exploding'); setTimeout(() => setPromoState('hidden'), 10000); }, 15000); }
     const tInt = setInterval(() => setTIdx(p => (p + 1) % 4), 3000);
 
-    if ("geolocation" in navigator) {
+    if("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (p) => fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.coords.latitude}&lon=${p.coords.longitude}`).then(r=>r.json()).then(d=>setUserCity(d.address?.city||d.address?.town||d.address?.county||"Indonesia")).catch(()=>setUserCity("Indonesia")),
-        () => fetch('https://get.geojs.io/v1/ip/geo.json').then(r=>r.json()).then(d=>setUserCity(d.city||"Indonesia")).catch(()=>setUserCity("Indonesia")),
-        { timeout: 10000, enableHighAccuracy: true }
+        () => fetch('https://get.geojs.io/v1/ip/geo.json').then(r=>r.json()).then(d=>setUserCity(d.city||"Indonesia")).catch(()=>setUserCity("Indonesia")), { timeout: 10000, enableHighAccuracy: true }
       );
     }
-
     const cInt = setInterval(() => {
       const d = new Date();
       setCurrentTime(d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) + ' | ' + d.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}));
@@ -95,7 +94,7 @@ export function Header() {
 
     const aN = [];
     const tS = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-    if (!localStorage.getItem('habi_yt_del')) {
+    if(!localStorage.getItem('habi_yt_del')) {
       aN.push({ id:'yt', type:'youtube', time:tS, title:'Admin Habi', text:'Dukung karya kami dengan {link} channel resmi kami.' });
     }
     setNotifs(aN);
@@ -106,7 +105,6 @@ export function Header() {
       setNotifs(p => [{ id:'wd_'+d.id, type:'withdraw', time:tm, title:'Finance', text:`💳 PENDING: Rp100.000 ke ${d.method} (${d.account}) sedang diproses.` }, ...p]);
     };
     window.addEventListener('habi_withdraw_event', handleWd);
-
     return () => { clearTimeout(lTimer); clearTimeout(eT); clearInterval(cInt); clearInterval(tInt); window.removeEventListener('habi_withdraw_event', handleWd); };
   }, [promoState]);
 
@@ -114,14 +112,14 @@ export function Header() {
     const isV = pathname?.includes("/detail") || pathname?.includes("/watch");
     setIsWatching(isV);
     const resetI = () => { setIsIdle(false); clearTimeout(idleTimeout.current); idleTimeout.current = setTimeout(() => setIsIdle(true), 5000); };
-    if (isV) { window.addEventListener('mousemove', resetI); window.addEventListener('scroll', resetI); window.addEventListener('touchstart', resetI); resetI(); } 
-    else { setIsIdle(false); }
+    if(isV) { window.addEventListener('mousemove', resetI); window.addEventListener('scroll', resetI); window.addEventListener('touchstart', resetI); resetI(); } 
+    else setIsIdle(false);
     return () => { window.removeEventListener('mousemove', resetI); window.removeEventListener('scroll', resetI); window.removeEventListener('touchstart', resetI); clearTimeout(idleTimeout.current); };
   }, [pathname]);
 
   useEffect(() => {
     let cT, tT;
-    if (promoState === 'progress' && isWatching && isIdle) {
+    if(promoState === 'progress' && isWatching && isIdle) {
       cT = setInterval(() => {
         setBalance(p => {
           const e = Math.floor(Math.random() * (1300 - 700 + 1)) + 700;
@@ -136,80 +134,96 @@ export function Header() {
     return () => { clearInterval(cT); clearTimeout(tT); };
   }, [promoState, isWatching, isIdle]);
 
-  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt, chatMode]);
+  useEffect(() => { if(chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt, chatMode]);
+
   const openChatCS = () => {
     setChatOpen(true);
     if(chatMode === 'idle') {
-      setChatMode('queue');
-      setCsSt("Mencari CS yang tersedia...");
+      setChatMode('queue'); setCsSt("Mencari CS yang tersedia...");
       setTimeout(() => {
         setCsSt("Antrean ke-1...");
         setTimeout(() => {
-          setChatMode('connected');
-          setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku ${csInfo.name} dari CS Habi Music. Ada yang bisa dibantu? 😊` }]);
-        }, 3500);
+          setChatMode('connected'); setCsSt("Online");
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku ${csInfo.name} dari CS Habi Music. Ada yang mau ditanyain soal aplikasi atau penarikan dana? 😊` }]);
+        }, 3000);
       }, 2500);
     }
   };
 
-  // ==========================================
-  // OTAK AI REALISTIS + UPLOAD GAMBAR
-  // ==========================================
-  const handleImageUpload = (e) => {
+  const getBase64 = (file) => new Promise((res) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => res(reader.result.split(',')[1]);
+  });
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if(!file) return;
     const url = URL.createObjectURL(file);
-    sendChatCore(null, true, url);
+    const b64 = await getBase64(file);
+    sendChatCore("Ini screenshot dari aku ya kak", true, url, b64, file.type);
   };
 
-  const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); };
+  const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null, null, null); };
 
-  const sendChatCore = async (text, isImg = false, imgUrl = null) => {
-    if (!isImg && !text.trim()) return;
-    if (chatMode !== 'connected') return;
+  // ===============================================
+  // OTAK AI GEMINI (MATA & CHAT PATAH-PATAH NYATA)
+  // ===============================================
+  const sendChatCore = async (text, isImg=false, imgUrl=null, base64=null, mimeType=null) => {
+    if(!isImg && !text.trim()) return;
+    if(chatMode !== 'connected') return;
     
     const msgId = Date.now().toString();
     const tStr = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-    const userMsg = text;
-    
-    setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:userMsg, img:imgUrl, status:'sent' }]);
+    setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:text, img:imgUrl, status:'sent' }]);
     if(!isImg) setChatInput("");
 
-    // 1. Centang 2 Abu-abu (Terkirim) -> Tunggu 2-5 detik untuk dibaca (Centang Biru)
-    const readDelay = Math.floor(Math.random() * 3000) + 2000; 
-    
+    // 1. Centang 2 Abu (Terkirim) -> Tunggu 2-4 detik untuk Dibaca
     setTimeout(async () => {
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
-      setCsSt("Mengetik..."); // CS Mulai Ngetik
+      
+      // 2. CS Mulai Ngetik Awal
+      setCsSt("Mengetik..."); 
       
       let reply = "";
-      
-      if (isImg) {
-        reply = "Baik Kak, gambar/screenshotnya udah aku terima. Aku cek ke sistem dulu ya, untuk kendala ini lagi diproses sama tim terkait. Ditunggu updatenya 🙏";
-      } else {
-        try {
-          // PANGGIL AI API GRATIS (PINTAR & BISA JAWAB APA SAJA)
-          const prompt = `Berperanlah sebagai ${csInfo.name}, CS cewek dari aplikasi Habi Music (nonton video dapat uang). Kamu orang Jawa Timur, logatnya ramah, asyik, sopan. Jawab pertanyaan user berikut ini dengan logis, singkat (maks 2 kalimat), dan masuk akal. Jika ditanya hal di luar aplikasi, jawab santai tapi tetap arahkan ke Habi Music. Pertanyaan User: "${userMsg}"`;
-          
-          const aiRes = await fetch(`https://text.pollinations.ai/prompt/${encodeURIComponent(prompt)}`);
-          reply = await aiRes.text();
-        } catch(err) {
-          reply = "Maaf Kak, jaringanku lagi agak down nih 🙏 Boleh diulang pertanyaannya?";
+      try {
+        const prompt = `Kamu adalah ${csInfo.name}, customer service wanita berhijab asal Jawa Timur untuk aplikasi "Habi Music" (nonton video dapat uang saldo DANA/Gopay).
+Sifatmu: Ramah, santai, logis, sopan, kadang pakai bahasa gaul Jatim sedikit (rek, lho, wes).
+Tugas: Jawab chat user ini dengan singkat (1-3 kalimat). Jika dia kirim gambar/screenshot, kamu BISA melihatnya! Analisis gambar itu dan berikan komentar yang pas dengan apa yang ada di gambar. Jika dia nanya di luar aplikasi (misal: "lagi apa", "makan"), jawab santai layaknya manusia tapi arahkan balik ke aplikasi.
+Pesan User: "${text}"`;
+
+        const payload = { contents: [{ parts: [{ text: prompt }] }] };
+        if(isImg && base64) {
+          payload.contents[0].parts.push({ inline_data: { mime_type: mimeType, data: base64 } });
         }
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        reply = data.candidates[0].content.parts[0].text;
+      } catch(err) {
+        reply = "Maaf Kak, sistem aku lagi agak nge-lag nih 🙏 Bisa diulangi pertanyaannya?";
       }
 
-      // 2. Waktu Ngetik Realistis (5 - 20 detik tergantung panjang jawaban)
-      const typingDuration = Math.min(Math.max(reply.length * 60, 5000), 20000); 
-
+      // 3. Jeda Animasi Ngetik Patah-Patah (Realistis)
       setTimeout(() => {
-        setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply }]);
-        setCsSt("Online"); // Selesai ngetik
-      }, typingDuration);
-      
-    }, readDelay);
-  };
+        setCsSt("Online"); // Berhenti ngetik bentar (mikir)
+        
+        setTimeout(() => {
+          setCsSt("Mengetik..."); // Lanjut ngetik lagi
+          
+          setTimeout(() => {
+            setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply }]);
+            setCsSt("Online"); // Selesai
+          }, Math.floor(Math.random() * 4000) + 3000); // 3-7 dtk
+          
+        }, Math.floor(Math.random() * 1500) + 500); // Jeda mikir 0.5 - 2 dtk
+        
+      }, Math.floor(Math.random() * 3000) + 2000); // Ngetik awal 2-5 dtk
 
+    }, Math.floor(Math.random() * 2500) + 1500); // Jeda centang abu ke biru
+  };
   const rawR = (isDramaBox ? dbRes.data : isReelShort ? rsRes?.data?.data : isShortMax ? smRes?.data?.data : isNetShort ? nsRes?.data?.data : isMelolo ? mlRes?.data?.data?.search_data?.flatMap(i=>i.books||[]).filter(b=>b.thumb_url) : isFlickReels ? frRes?.data?.data : freRes.data) || [];
   const getMap = (i) => {
     if(isDramaBox) return {l:`/detail/dramabox/${i.bookId}`, c:i.cover, t:i.bookName};
@@ -272,17 +286,12 @@ export function Header() {
                       {/* HEADER WHATSAPP ASLI */}
                       <div className="flex items-center p-3 bg-[#075e54] text-white shadow-md z-10">
                         <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer border border-white/20">
                           {csInfo.img ? <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-white"/>}
                         </div>
                         <div className="flex flex-col flex-1 cursor-pointer">
                           <span className="font-semibold text-base leading-tight">CS {csInfo.name}</span>
                           <span className="text-[12px] opacity-90 truncate">{csSt}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-white ml-2">
-                          <Video className="w-5 h-5 cursor-pointer"/>
-                          <Phone className="w-5 h-5 cursor-pointer"/>
-                          <MoreVertical className="w-5 h-5 cursor-pointer"/>
                         </div>
                       </div>
                       
@@ -290,14 +299,13 @@ export function Header() {
                       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 relative" style={{backgroundColor:'#e5ddd5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover'}} ref={chatRef}>
                         <div className="text-center text-[11px] text-gray-700 font-medium my-2 bg-[#D1EAF1] self-center px-4 py-1.5 rounded-lg shadow-sm">HARI INI</div>
                         
-                        {/* Pesan Enkripsi */}
                         <div className="text-center text-[10px] text-gray-600 font-medium my-1 bg-[#FEF4C5] self-center px-3 py-2 rounded-lg shadow-sm w-[90%] leading-relaxed flex items-start gap-1">
                            <div className="mt-0.5">🔒</div>
-                           <span>Pesan dan panggilan dienkripsi secara end-to-end. Tidak seorang pun di luar chat ini, termasuk Habi Music, yang dapat membaca atau mendengarkannya.</span>
+                           <span>Pesan dan panggilan dienkripsi secara end-to-end. Tim Habi Music tidak dapat membaca sandi Anda.</span>
                         </div>
 
                         {chatMode === 'queue' && (
-                           <div className="self-center bg-white/90 text-gray-700 text-xs px-4 py-2 rounded-full font-bold animate-pulse mt-4 flex items-center gap-2 shadow-sm">
+                           <div className="self-center bg-white/90 text-gray-700 text-xs px-4 py-2 rounded-full font-bold mt-4 flex items-center gap-2 shadow-sm">
                              <div className="w-3 h-3 border-2 border-[#075e54] border-t-transparent rounded-full animate-spin"></div> {csSt}
                            </div>
                         )}
@@ -305,10 +313,8 @@ export function Header() {
                         {chatMode === 'connected' && chats.map(c => (
                           <div key={c.id} className={`flex flex-col max-w-[85%] ${c.sender === 'user' ? 'self-end' : 'self-start'}`}>
                             <div className={`p-2 rounded-lg text-[14px] shadow-[0_1px_1px_rgba(0,0,0,0.1)] relative ${c.sender === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
-                              
                               {c.img && <img src={c.img} className="w-full max-w-[200px] rounded-md mb-1 border border-gray-200" alt="uploaded"/>}
                               {c.text && <p className="text-[#111111] break-words pr-12 pb-2 pl-1 leading-snug">{c.text}</p>}
-                              
                               <div className="absolute right-1.5 bottom-1 flex items-center gap-1">
                                 <span className="text-[10px] text-gray-500 font-medium">{c.time.split(' ')[0]}</span>
                                 {c.sender === 'user' && (c.status === 'read' ? <CheckCheck className="w-4 h-4 text-[#34B7F1]"/> : <CheckCheck className="w-4 h-4 text-gray-400"/>)}
@@ -318,24 +324,16 @@ export function Header() {
                         ))}
                       </div>
 
-                      {/* INPUT WHATSAPP ASLI + FITUR GAMBAR */}
+                      {/* INPUT WHATSAPP + FITUR KIRIM GAMBAR UNTUK AI */}
                       <div className="p-2 bg-transparent flex gap-1.5 items-end relative z-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover' }}>
                         <div className="flex-1 bg-white rounded-3xl px-2 py-1.5 flex items-end shadow-sm border border-gray-200 min-h-[44px]">
                            <button className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0"><Smile className="w-6 h-6"/></button>
-                           <textarea 
-                             value={chatInput} 
-                             onChange={e=>setChatInput(e.target.value)} 
-                             disabled={chatMode !== 'connected'} 
-                             placeholder="Ketik pesan" 
-                             className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]"
-                             rows="1"
-                           />
+                           <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
                            
-                           {/* FITUR UPLOAD GAMBAR */}
+                           {/* TOMBOL UPLOAD GAMBAR */}
                            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-                           <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0 disabled:opacity-50 transform -rotate-45"><Paperclip className="w-6 h-6"/></button>
-                           
-                           {chatInput.length === 0 && <button disabled={chatMode !== 'connected'} className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0 disabled:opacity-50"><Camera className="w-6 h-6"/></button>}
+                           <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0 transform -rotate-45"><Paperclip className="w-6 h-6"/></button>
+                           {chatInput.length === 0 && <button disabled={chatMode !== 'connected'} className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0"><Camera className="w-6 h-6"/></button>}
                         </div>
                         <button onClick={sendChat} disabled={chatMode !== 'connected' || chatInput.trim().length === 0} className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mb-0.5 transition-colors ${chatMode === 'connected' && chatInput.trim().length > 0 ? 'bg-[#00a884] hover:bg-[#008f6f]' : 'bg-gray-400'}`}>
                           <Send className="w-5 h-5 text-white ml-1"/>
@@ -376,7 +374,7 @@ export function Header() {
       )}
 
       {showCoinMenu && createPortal(
-        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Menu Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={actBerhenti} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
+        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 animate-in fade-in zoom-in duration-200"><div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"><button onClick={()=>setShowCoinMenu(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"><X className="w-5 h-5"/></button><div className="p-6 text-center border-b border-gray-100"><div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3"><CircleDollarSign className="w-8 h-8 text-yellow-600"/></div><h2 className="font-black text-xl text-gray-900">Menu Koin</h2><p className="text-xs text-gray-500 mt-1 font-medium">Saldo bertambah otomatis saat fokus nonton.</p></div><div className="p-4 space-y-3 bg-gray-50"><button onClick={()=>setShowCoinMenu(false)} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-green-100 hover:bg-green-50 active:scale-95"><Tv className="w-6 h-6 text-green-500 mr-3"/><span className="font-bold text-gray-800">Lanjut Hasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);setPromoState('hidden');alert("Sistem uang dijeda. Saldo aman.");}} className="w-full flex items-center bg-white p-4 rounded-2xl shadow-sm border border-red-100 hover:bg-red-50 active:scale-95"><StopCircle className="w-6 h-6 text-red-500 mr-3"/><span className="font-bold text-gray-800">Berhenti Menghasilkan Uang</span></button><button onClick={()=>{setShowCoinMenu(false);alert("Memuat iklan... (Demo)");}} className="w-full flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-md active:scale-95"><Play className="w-6 h-6 text-white fill-white mr-3"/><span className="font-bold text-white">Nonton Iklan (Dapat 10Rb!)</span></button></div></div></div>, document.body
       )}
     </>
   );
