@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft, User, Video, Phone, MoreVertical, Paperclip, Camera, Smile, Clock } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, CheckCheck, ArrowLeft, Paperclip, Smile } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -35,6 +35,9 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
+  // NAMA CS ACAK CEWEK INDO JATIM
+  const csNames = ["Siti", "Ayu", "Nisa", "Rini", "Putri", "Dinda"];
+  const [csInfo, setCsInfo] = useState({ name: "CS" });
   const [csSt, setCsSt] = useState("Online");
   const [chatMode, setChatMode] = useState('idle'); 
   const [showNotif, setShowNotif] = useState(false);
@@ -59,6 +62,7 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
+    setCsInfo({ name: csNames[Math.floor(Math.random() * csNames.length)] });
     const sBal = localStorage.getItem('habi_balance');
     if(sBal) setBalance(Number(sBal));
 
@@ -129,12 +133,12 @@ export function Header() {
   const openChatCS = () => {
     setChatOpen(true);
     if(chatMode === 'idle') {
-      setChatMode('queue'); setCsSt("Mencari CS yang tersedia...");
+      setChatMode('queue'); setCsSt("Mencari agen CS...");
       setTimeout(() => {
         setCsSt("Antrean ke-1...");
         setTimeout(() => {
           setChatMode('connected'); setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku CS Habi Music. Ada yang mau ditanyain soal aplikasi atau penarikan dana? 😊` }]);
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Assalamualaikum Kak 🙏 Perkenalkan aku ${csInfo.name}, CS dari Habi Music. Ada yang bisa aku bantu untuk aplikasinya hari ini? 😊` }]);
         }, 3000);
       }, 2500);
     }
@@ -144,13 +148,13 @@ export function Header() {
     const file = e.target.files[0];
     if(!file) return;
     const url = URL.createObjectURL(file);
-    sendChatCore("Ini aku kirim screenshot ya kak", true, url);
+    sendChatCore("Ini bukti screenshot dari aku ya kak", true, url);
   };
 
   const sendChat = (e) => { e.preventDefault(); sendChatCore(chatInput, false, null); setShowEmoji(false); };
 
   // ===============================================
-  // OTAK AI CANGGIH (TANPA API KEY) + SISTEM MEMORI
+  // OTAK ULTRA V.1 (Mikir, Sat-set, Sopan, Animasi)
   // ===============================================
   const sendChatCore = async (text, isImg=false, imgUrl=null) => {
     if(!isImg && !text.trim()) return;
@@ -161,57 +165,60 @@ export function Header() {
     setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:text, img:imgUrl, status:'sent' }]);
     if(!isImg) setChatInput("");
 
-    const readDelay = Math.floor(Math.random() * 1500) + 1000; 
+    // JEDA 1: Belum dibaca (Centang abu) -> Tunggu 3 sampai 6 Detik
+    const readDelay = Math.floor(Math.random() * 3000) + 3000; 
     
     setTimeout(async () => {
+      // DIBACA (Berubah centang biru)
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
-      setCsSt("Mengetik..."); 
       
-      let reply = "";
-      try {
-        // SISTEM MEMORI: AI Mengingat 4 percakapan terakhir agar nyambung!
-        let historyText = "";
-        chats.slice(-4).forEach(c => { historyText += `${c.sender==='user'?'User':'Kamu'}: ${c.text}\n`; });
+      // JEDA 2: Waktu CS Mikir (1 sampai 3 detik) status masih 'Online'
+      const thinkDelay = Math.floor(Math.random() * 2000) + 1000;
 
-        let prompt = `Instruksi Mutlak: Kamu adalah CS Habi Music (Cewek Jawa Timur berhijab). Aplikasi ini menghasilkan uang dengan nonton video. Minimal penarikan saldo Rp 100.000. Jawab sangat singkat (maksimal 2 kalimat), santai, tidak kaku, dan seperti manusia. JANGAN PERNAH MENYEBUT DIRIMU AI ATAU ROBOT.\n`;
+      setTimeout(async () => {
+        // MULAI NGETIK
+        setCsSt("Mengetik..."); 
+        
+        let reply = "";
+        const lText = text.toLowerCase();
+        // Deteksi kalimat gampang
+        const isSimple = lText.match(/\b(p|hai|halo|assalamu|salam|ping|ok|sip|makasih|iya|y)\b/);
 
-        // SISTEM SIMULASI MATA: Jika user kirim foto, AI dipaksa "melihat"
-        if(isImg) {
-          prompt += `\n[SISTEM RAHASIA: User baru saja mengirim GAMBAR SCREENSHOT. Kamu harus membalas: "Gambarnya udah aku cek kak. Kalau saldonya masih di bawah 100rb belum bisa ditarik ya, minimal penarikan 100rb. Semangat nonton terus biar koinnya cepat cair! 😊"]\n`;
+        try {
+          // PROMPT SANGAT SPESIFIK (Muslimah Jatim, Sopan)
+          let prompt = `Instruksi Mutlak: Kamu adalah CS Habi Music bernama ${csInfo.name}. Kamu wanita muslimah Jawa Timur yang sangat sopan dan ramah kepada pembeli/pengguna. Jawab MAX 2 kalimat pendek ala chat WA biasa. Jangan formal, jangan sebut kamu AI.\n`;
+          
+          if(isImg) {
+            prompt += `[INFO: Pengguna baru kirim Foto Screenshot. Berikan balasan: "Baik kak, gambarnya udah ${csInfo.name} terima ya 🙏 Kalau saldonya belum 100rb, lanjut nonton dulu aja ya kak biar koinnya cepat nambah dan bisa dicairkan 😊"]\n`;
+          }
+
+          prompt += `User: "${text}"\nBalasanmu:`;
+
+          const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+          if (!res.ok) throw new Error("API failed");
+          reply = await res.text();
+
+        } catch(err) {
+          // CADANGAN SUPER AMAN
+          if(isImg) reply = `Baik Kak, gambarnya udah ${csInfo.name} terima ya. Nanti diteruskan ke tim teknis 🙏`;
+          else if (lText.match(/\b(assalamu|salam|samlekom)\b/)) reply = `Waalaikumsalam Kak 🙏 Ada yang bisa ${csInfo.name} bantu untuk penarikannya?`;
+          else if (lText.match(/cair|tarik|uang|wd/)) reply = "Proses penarikan biasanya memakan waktu 1-3 hari kerja ya Kak 😊 Mohon ditunggu.";
+          else if (lText.match(/kok|lama|belum|mana/)) reply = "Mohon maaf yang sebesar-besarnya ya Kak bikin nunggu 🙏 Antrean penarikan memang lagi padat hari ini.";
+          else if (lText.match(/\b(halo|hai|pagi|siang|p|ping)\b/)) reply = `Halo Kak! Aku ${csInfo.name}, ada kendala apa nih di aplikasinya?`;
+          else if (lText.match(/iya|oke|sip|baik|makasih/)) reply = `Sama-sama Kak! Senang bisa membantu. Kalau ada apa-apa chat ${csInfo.name} lagi ya 😊`;
+          else reply = `Oh begitu ya Kak hehe. Terus kelanjutannya gimana tuh Kak? 😊`;
         }
 
-        prompt += `\nRiwayat Obrolan:\n${historyText}User: ${text}\nKamu:`;
+        // JEDA 3: Waktu Ngetik (Sat-set kalau pertanyaan gampang, lama kalau panjang)
+        const baseTyping = isSimple ? 1500 : Math.min(Math.max(reply.length * 40, 3000), 8000);
+        const typingDuration = baseTyping + Math.floor(Math.random() * 1000); 
 
-        const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
-        if (!res.ok) throw new Error("API failed");
-        reply = await res.text();
-
-      } catch(err) {
-        // Fallback jika internet pengguna putus
-        const l = text.toLowerCase();
-        if(isImg) reply = "Gambarnya udah aku cek kak 😊 Kalo saldonya belum 100rb lanjut nonton dulu ya biar bisa ditarik.";
-        else if (l.match(/\b(assalamu|salam|samlekom)\b/)) reply = "Waalaikumsalam Kak 🙏 Ada yang bisa aku bantu?";
-        else if (l.match(/cair|tarik|uang|wd|gopay|dana/)) reply = "Minimal penarikan 100rb Kak, proses 1-3 hari kerja 😊.";
-        else if (l.match(/iya|oke|sip|baik|oh/)) reply = "Siap Kak! Ada lagi yang mau ditanyain?";
-        else if (l.match(/kok|lama|mana/)) reply = "Maaf banget ya Kak bikin nunggu 🙏 Antrean penarikan emang lagi padat banget.";
-        else if (l.match(/gimana|cara/)) reply = "Kakak tinggal diem dan fokus nonton videonya aja, nanti koinnya nambah otomatis.";
-        else if (l.match(/gak nyambung|robot|bot|ai/)) reply = `Eh maaf kak kalau ada salah paham 🙏 Aku beneran admin kok. Ada kendala apa kak?`;
-        else reply = "Iya kak paham, untuk aplikasinya sejauh ini lancar kan nggak ada kendala?";
-      }
-
-      // Waktu ngetik realistis
-      const typingDuration = Math.min(Math.max(reply.length * 50, 3000), 12000); 
-
-      setTimeout(() => {
-        setCsSt("Online"); 
         setTimeout(() => {
-          setCsSt("Mengetik..."); 
-          setTimeout(() => {
-            setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply.replace(/\*/g,'') }]);
-            setCsSt("Online");
-          }, Math.floor(Math.random() * 2000) + 1500); 
-        }, 800); 
-      }, typingDuration - 2000);
+          setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply.replace(/\*/g,'') }]);
+          setCsSt("Online");
+        }, typingDuration);
+
+      }, thinkDelay);
 
     }, readDelay);
   };
@@ -277,17 +284,25 @@ export function Header() {
                     </>
                   ) : (
                     <>
+                      {/* HEADER WHATSAPP DENGAN ANIMASI LOGO PROFIL & TANPA TOMBOL TELPON */}
+                      <style dangerouslySetInnerHTML={{__html: `@keyframes fadeA { 0%, 45% {opacity:1} 50%, 95% {opacity:0} 100% {opacity:1} } @keyframes fadeB { 0%, 45% {opacity:0} 50%, 95% {opacity:1} 100% {opacity:0} }`}} />
+                      
                       <div className="flex items-center p-3 bg-[#008069] text-white shadow-md z-10">
                         <button onClick={()=>setChatOpen(false)} className="flex items-center hover:bg-white/10 rounded-full py-1 pr-1 mr-1 -ml-1 transition-colors"><ArrowLeft className="w-6 h-6"/></button>
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 cursor-pointer shadow-sm">
-                          <div className="w-[20px] h-[14px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>
+                        
+                        {/* FOTO PROFIL ANIMASI */}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center flex-shrink-0 mr-3 shadow-sm relative border-[1.5px] border-white/50">
+                           <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ animation: 'fadeA 8s infinite' }}>
+                              <div className="w-[20px] h-[14px] rounded-[3px] bg-[#FF0000] flex items-center justify-center"><Play className="w-2 h-2 text-white fill-white ml-0.5" /></div>
+                           </div>
+                           <div className="absolute inset-0 flex items-center justify-center bg-[#008069]" style={{ animation: 'fadeB 8s infinite' }}>
+                              <span className="text-[8px] font-black tracking-tighter leading-[10px] text-center text-white">HABI<br/>MUSIC</span>
+                           </div>
                         </div>
-                        <div className="flex flex-col flex-1 cursor-pointer">
-                          <span className="font-semibold text-base leading-tight">CS Habi Music</span>
+
+                        <div className="flex flex-col flex-1">
+                          <span className="font-semibold text-base leading-tight">CS {csInfo.name}</span>
                           <span className="text-[12px] opacity-90 truncate">{csSt}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-white ml-2">
-                          <Video className="w-5 h-5 opacity-80"/><Phone className="w-5 h-5 opacity-80"/><MoreVertical className="w-5 h-5 opacity-80"/>
                         </div>
                       </div>
                       
@@ -313,6 +328,7 @@ export function Header() {
                         ))}
                       </div>
 
+                      {/* INPUT WHATSAPP TANPA KAMERA */}
                       <div className="p-2 bg-transparent flex gap-1.5 items-end relative z-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover' }}>
                         {showEmoji && (
                           <div className="absolute bottom-[60px] left-2 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 grid grid-cols-8 gap-2 w-[90%] z-50 animate-in slide-in-from-bottom-2">
@@ -323,8 +339,7 @@ export function Header() {
                            <button onClick={() => setShowEmoji(!showEmoji)} className={`p-2 flex-shrink-0 ${showEmoji ? 'text-[#008069]' : 'text-gray-500'}`}><Smile className="w-6 h-6"/></button>
                            <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} disabled={chatMode !== 'connected'} placeholder="Ketik pesan" className="flex-1 bg-transparent px-2 py-2.5 text-[15px] outline-none disabled:opacity-50 resize-none max-h-24 min-h-[40px]" rows="1" />
                            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-                           <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 flex-shrink-0 transform -rotate-45"><Paperclip className="w-6 h-6"/></button>
-                           {chatInput.length === 0 && <button disabled={chatMode !== 'connected'} className="p-2 text-gray-500 flex-shrink-0"><Camera className="w-6 h-6"/></button>}
+                           <button onClick={()=>fileInputRef.current.click()} disabled={chatMode !== 'connected'} className="p-2 text-gray-500 flex-shrink-0 transform -rotate-45 ml-1 mr-1 hover:text-[#008069]"><Paperclip className="w-6 h-6"/></button>
                         </div>
                         <button onClick={sendChat} disabled={chatMode !== 'connected' || chatInput.trim().length === 0} className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mb-0.5 transition-colors ${chatMode === 'connected' && chatInput.trim().length > 0 ? 'bg-[#008069]' : 'bg-gray-400'}`}>
                           <Send className="w-5 h-5 text-white ml-1"/>
