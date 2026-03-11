@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft, Clock } from "lucide-react";
+import { Search, X, MapPin, Play, Bell, Trash2, StopCircle, Tv, CircleDollarSign, MessageCircle, Send, Check, CheckCheck, ArrowLeft, User, Clock } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -36,15 +36,10 @@ export function Header() {
   const [showCoinMenu, setShowCoinMenu] = useState(false);
   const [videoToast, setVideoToast] = useState(null);
   
-  // Data Profil CS Wanita Indonesia Berhijab
-  const csData = [
-    { name: "Nadia (CS Jateng)", img: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=150&h=150&fit=crop" },
-    { name: "Ayu (CS Support)", img: "https://images.pexels.com/photos/8101511/pexels-photo-8101511.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" },
-    { name: "Siska (Admin)", img: "https://images.pexels.com/photos/6105315/pexels-photo-6105315.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" }
-  ];
-  const [csInfo, setCsInfo] = useState({ name: "CS", img: "" });
+  // CS Info (Dijamin Wajah Manusia Asli, Bukan Botol)
+  const [csInfo] = useState({ name: "Tasya", img: "https://randomuser.me/api/portraits/women/44.jpg" });
   const [csSt, setCsSt] = useState("Online");
-  const [chatMode, setChatMode] = useState('idle'); // idle, queue, connected
+  const [chatMode, setChatMode] = useState('idle'); 
   
   const [showNotif, setShowNotif] = useState(false);
   const [notifs, setNotifs] = useState([]);
@@ -64,8 +59,6 @@ export function Header() {
 
   useEffect(() => {
     setIsMounted(true);
-    setCsInfo(csData[Math.floor(Math.random() * csData.length)]);
-    
     const sBal = localStorage.getItem('habi_balance');
     if (sBal) setBalance(Number(sBal));
 
@@ -136,26 +129,26 @@ export function Header() {
   }, [promoState, isWatching, isIdle]);
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chats, chatOpen, csSt, chatMode]);
-  // FITUR ANTREAN CS
   const openChatCS = () => {
     setChatOpen(true);
     if(chatMode === 'idle') {
       setChatMode('queue');
       setCsSt("Mencari agen CS yang tersedia...");
-      
       setTimeout(() => {
         setCsSt("Anda berada dalam antrean ke-2...");
-        
         setTimeout(() => {
           setChatMode('connected');
           setCsSt("Online");
-          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Saya ${csInfo.name.split(' ')[0]} dari tim Support Habi. Ada yang bisa dibantu? 😊` }]);
+          setChats([{ id:'c1', sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:`Halo Kak! Aku ${csInfo.name} dari tim CS Habi Music. Ada yang bisa dibantu? 😊` }]);
         }, 3000);
       }, 2500);
     }
   };
 
-  const sendChat = (e) => {
+  // ==========================================
+  // OTAK AI (MENGGUNAKAN FREE AI API POLLINATIONS)
+  // ==========================================
+  const sendChat = async (e) => {
     e.preventDefault();
     if (!chatInput.trim() || chatMode !== 'connected') return;
     
@@ -166,60 +159,34 @@ export function Header() {
     setChats(p => [...p, { id:msgId, sender:'user', time:tStr, text:userMsg, status:'sent' }]);
     setChatInput("");
 
-    // Logika Jeda AI Realistis
-    const readDelay = Math.floor(Math.random() * 2000) + 1000; 
+    // Centang 2 Biru dlm 1-2 dtk
+    const readDelay = Math.floor(Math.random() * 1500) + 1000; 
     
-    setTimeout(() => {
+    setTimeout(async () => {
       setChats(p => p.map(m => m.id === msgId ? {...m, status:'read'} : m)); 
       setCsSt("Mengetik...");
       
-      const l = userMsg.toLowerCase();
       let reply = "";
-      
-      // LOGIKA OTAK AI (PINTAR & NGEYEL)
-      if (l.match(/assalamu|salam|samlekom/)) {
-          reply = "Waalaikumsalam Kak 🙏 Ada yang bisa kami bantu terkait aplikasinya?";
-      } else if (l.match(/cair|tarik|uang/)) {
-          const arr = ["Prosesnya 1-3 hari kerja ya Kak 😊", "Mohon ditunggu Kak, estimasi 1-3 hari masuk ke rekening Kakak.", "Lagi diproses tim finance Kak, maksimal 3 harian ya."];
-          reply = arr[Math.floor(Math.random() * arr.length)];
-      } else if (l.match(/kok|lama|belum/)) {
-          const arr = ["Maaf banget Kak bikin nunggu 🙏 antrean penarikan hari ini emang lagi padat, pasti cair kok!", "Mohon maaf ya Kak atas keterlambatannya, ini lagi aku bantu push ke tim teknis."];
-          reply = arr[Math.floor(Math.random() * arr.length)];
-      } else if (l.match(/gimana|cara/)) {
-          reply = "Gampang Kak, diem dan fokus nonton videonya aja (jangan di-scroll), koin akan nambah otomatis.";
-      } else if (l.match(/bohong|tipu|scam|hoax/)) {
-          reply = "Amanah 100% Kak 😊 Selama nggak pakai bot/cheat, saldo pasti kami transfer full.";
-      } else if (l.match(/masa|bener|serius/)) {
-          reply = "Iya beneran dong Kak hehe. Kumpulin aja dulu saldonya sampai 100rb terus cobain tarik ya.";
-      } else if (l.match(/halo|hai|p/)) {
-          reply = `Halo Kak! Ada kendala yang bisa aku bantu?`;
-      } else if (l.match(/lagi apa|makan|sibuk/)) {
-          reply = "Lagi jawabin chat Kakak nih hehe 😊 Btw ada kendala soal koin atau aplikasinya?";
-      } else if (l.match(/bot|robot/)) {
-          reply = `Enak aja, aku asli cewek Jawa Timur tau Kak 😂 Ada yang mau ditanyain soal koinnya kah?`;
-      } else if (l.match(/cantik|sayang/)) {
-          reply = "Waduh makasih pujiannya Kak 🙈 hehe. Balik ke topik ya, penarikan uangnya sejauh ini aman kan?";
-      } else if (l.match(/ok|sip|y|baik|makasih|thanks/)) {
-          reply = "Sama-sama Kak! Senang bisa ngebantu. Kalau ada apa-apa chat aku lagi ya 😊";
-      } else {
-          // AI Ngeles kalau bahas di luar konteks
-          const arr = [
-              "Wahahaha iya paham Kak 😂 Btw soal Habi Music ada kendala nggak?",
-              "Hmm gitu ya Kak.. Terus ceritanya gimana tuh? Eh btw aplikasinya lancar kan?",
-              "Bisa aja nih Kakak hehe 😅 Lanjut nonton dramanya gih biar koin nambah terus.",
-              "Waduh lumayan dalem juga tuh bahasannya Kak wkwk. Btw penarikannya aman kan?",
-              "Iya bener banget Kak. Maaf ya tadi agak lama balesnya, chatnya lagi numpuk 😅"
-          ];
-          reply = arr[Math.floor(Math.random() * arr.length)];
+      try {
+        // AI API Call (Nyambung ke segala hal)
+        const prompt = `Kamu adalah Tasya, wanita ramah asal Jawa Timur yang bekerja sebagai CS di aplikasi Habi Music (nonton video dapat uang). Jawab pertanyaan user ini dengan santai, singkat (1-2 kalimat), sopan, dan gunakan bahasa Indonesia gaul: "${userMsg}"`;
+        const aiRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+        reply = await aiRes.text();
+      } catch(err) {
+        // Fallback jika API gagal
+        const fallbacks = ["Aduh maaf Kak, sinyalku lagi jelek nih 😅 Bisa diulangi pertanyaannya?", "Maaf Kak, sistem kami lagi sibuk banget. Gimana tadi?"];
+        reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
       }
 
-      // Waktu ngetik tergantung panjang balasan (Makin panjang, makin lama)
-      const typingDuration = Math.min(Math.max(reply.length * 80, 5000), 20000); 
+      // Hitung Lama Ngetik (Makin panjang teks, makin lama ngetik)
+      // Minimal 4 detik, maksimal 15 detik.
+      const typingDuration = Math.min(Math.max(reply.length * 70, 4000), 15000); 
 
       setTimeout(() => {
         setChats(p => [...p, { id:Date.now().toString(), sender:'admin', time:new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}), text:reply }]);
         setCsSt("Online");
       }, typingDuration);
+      
     }, readDelay);
   };
 
@@ -288,7 +255,7 @@ export function Header() {
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center flex-shrink-0 border-2 border-white/30">
                           {csInfo.img ? <img src={csInfo.img} alt={csInfo.name} className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-white"/>}
                         </div>
-                        <div className="flex flex-col"><span className="font-bold text-base leading-tight">{csInfo.name}</span><span className="text-[11px] font-medium opacity-90">{csSt}</span></div>
+                        <div className="flex flex-col"><span className="font-bold text-base leading-tight">CS - {csInfo.name.split(' ')[0]}</span><span className="text-[11px] font-medium opacity-90">{csSt}</span></div>
                       </div>
                       
                       {/* BODY WA */}
