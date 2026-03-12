@@ -91,14 +91,30 @@ export default function DramaBoxDetailPage() {
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 py-8">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            <span>Kembali</span>
-          </button>
+          
+          {/* === MULAI RACIKAN 3 TOMBOL === */}
+          <div className="flex items-center gap-2 mb-6 w-full max-w-2xl">
+            {/* Tombol Beranda */}
+            <Link href="/" className="flex-1 bg-[#1877F2] hover:bg-[#166fe5] text-white flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold text-[13px] shadow-sm transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              Beranda
+            </Link>
+            
+            {/* Tombol Nonton Kembali */}
+            <button onClick={() => window.location.reload()} className="flex-[1.2] bg-[#E50914] hover:bg-[#d00812] text-white flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold text-[13px] shadow-sm transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              Nonton Kembali
+            </button>
+
+            {/* Tombol CS */}
+            <button onClick={() => {
+              alert("Untuk menghubungi CS, silakan klik tombol Lonceng (Notifikasi) di pojok kanan atas layar ya Kak! 🙏");
+            }} className="flex-1 bg-[#25D366] hover:bg-[#20bd5a] text-white flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold text-[13px] shadow-sm transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.335.101.155.451.722.955 1.166.65.57 1.205.753 1.364.84.159.087.253.072.347-.029.094-.101.398-.461.506-.62.108-.159.212-.13.356-.076l2.253 1.061c.144.067.24.101.275.159.034.058.034.332-.11.737z"/></svg>
+              CS
+            </button>
+          </div>
+          {/* === AKHIR RACIKAN 3 TOMBOL === */}
 
           <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
             {/* Cover */}
